@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI',
+    'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f3f6;
+  --color-line: #e2e5ea;
+  --color-line-strong: #cbd1da;
+  --color-ink: #16191f;
+  --color-ink-muted: #5b6472;
+  --color-ink-faint: #8b95a3;
+
+  --color-accent: #1d4ed8;
+  --color-accent-soft: #e8edfb;
+  --color-positive: #157347;
+  --color-positive-soft: #e3f3ea;
+  --color-negative: #b42318;
+  --color-negative-soft: #fbeae8;
+  --color-caution: #a15c07;
+  --color-caution-soft: #fdf1de;
+
+  /* 차트 계열 색. 3개 슬롯 모두 라이트/다크 양쪽에서 CVD 분리 검증을 통과한 조합이다. */
+  --color-series-1: #2a78d6;
+  --color-series-2: #eb6834;
+  --color-series-3: #1baf7a;
+  --color-grid: #eceff3;
+}
+
+:root {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-canvas: #0e1116;
+    --color-surface: #151a21;
+    --color-surface-muted: #1b212a;
+    --color-line: #262d38;
+    --color-line-strong: #38414f;
+    --color-ink: #e9edf3;
+    --color-ink-muted: #9aa5b4;
+    --color-ink-faint: #6c7686;
+
+    --color-accent: #6b93f7;
+    --color-accent-soft: #1a2438;
+    --color-positive: #4ec08a;
+    --color-positive-soft: #14271f;
+    --color-negative: #f2776a;
+    --color-negative-soft: #2a1715;
+    --color-caution: #dfa45a;
+    --color-caution-soft: #2a2015;
+
+    --color-series-1: #3987e5;
+    --color-series-2: #d95926;
+    --color-series-3: #199e70;
+    --color-grid: #1f262f;
+  }
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* 숫자가 많은 화면이므로 지표는 고정폭 숫자로 정렬한다. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-line-strong);
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-accent);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-accent);
+  cursor: pointer;
+}
+
+input[type='range']:disabled::-webkit-slider-thumb {
+  border-color: var(--color-line-strong);
+  cursor: not-allowed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 180ms ease-out;
+}
