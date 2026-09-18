@@ -34,8 +34,8 @@ export function EconomyScreen() {
   const step = FISCAL.changeLimits.policyRatePerTurn;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
-      <Panel title="GDP 추이" description="실질 GDP, 연율 기준입니다.">
+    <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-2">
+      <Panel title="GDP 추이" description="실질 GDP, 연율 기준입니다." hideDescriptionOnMobile>
         <LineChart
           labels={labels}
           format={formatAxisMoney}
@@ -43,7 +43,11 @@ export function EconomyScreen() {
         />
       </Panel>
 
-      <Panel title="물가와 실업률" description="두 지표는 대체로 반대 방향으로 움직입니다.">
+      <Panel
+        title="물가와 실업률"
+        description="두 지표는 대체로 반대 방향으로 움직입니다."
+        hideDescriptionOnMobile
+      >
         <LineChart
           labels={labels}
           includeZero
@@ -58,6 +62,7 @@ export function EconomyScreen() {
       <Panel
         title="국가부채 비율"
         description="GDP 대비 %. 물가와 성장은 이 비율을 낮추는 방향으로 작용합니다."
+        hideDescriptionOnMobile
       >
         <LineChart
           labels={labels}
@@ -75,7 +80,7 @@ export function EconomyScreen() {
           <Component label="수입" value={-economy.imports} gdp={economy.gdp} />
         </div>
 
-        <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-2 border-t pt-3 text-[12px]">
+        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t pt-3 text-[12px] md:gap-x-5">
           <Fact label="정부 세입" value={formatMoney(fiscal.revenue)} />
           <Fact label="정부 지출" value={formatMoney(fiscal.expenditure)} />
           <Fact label="재정수지" value={formatMoney(fiscal.balance)} />
@@ -90,7 +95,6 @@ export function EconomyScreen() {
         description="기준금리는 물가를 누르지만 소비와 투자를 함께 줄입니다."
         actions={
           <Button
-            size="sm"
             variant={policy.centralBankAuto ? 'primary' : 'secondary'}
             onClick={() => setCentralBankAuto(!policy.centralBankAuto)}
           >
@@ -99,7 +103,7 @@ export function EconomyScreen() {
         }
         className="xl:col-span-2"
       >
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-5">
           <div>
             <Slider
               label="기준금리"
@@ -130,7 +134,7 @@ export function EconomyScreen() {
             )}
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-5 gap-y-3 self-start text-[12px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 self-start text-[12px] md:gap-x-5">
             <Fact label="현재 기준금리" value={formatPercent(economy.policyRate, 2)} />
             <Fact label="준칙 제시 금리" value={formatPercent(suggested, 2)} />
             <Fact
@@ -149,9 +153,9 @@ function Component({ label, value, gdp }: { label: string; value: number; gdp: n
   const ratio = (value / Math.max(gdp, 1)) * 100;
   const negative = value < 0;
   return (
-    <div className="flex items-center gap-2 text-[12px]">
-      <span className="w-16 shrink-0 text-[var(--color-ink-muted)]">{label}</span>
-      <span className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
+    <div className="flex items-center gap-2 text-[11px] md:text-[12px]">
+      <span className="w-12 shrink-0 truncate text-[var(--color-ink-muted)] md:w-16">{label}</span>
+      <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
         <span
           className="block h-full rounded-full"
           style={{
@@ -160,8 +164,10 @@ function Component({ label, value, gdp }: { label: string; value: number; gdp: n
           }}
         />
       </span>
-      <span className="tnum w-24 text-right">{formatMoney(Math.abs(value))}</span>
-      <span className="tnum w-12 text-right text-[var(--color-ink-faint)]">
+      <span className="tnum w-[68px] shrink-0 text-right md:w-24">
+        {formatMoney(Math.abs(value))}
+      </span>
+      <span className="tnum w-10 shrink-0 text-right text-[var(--color-ink-faint)] md:w-12">
         {ratio.toFixed(1)}%
       </span>
     </div>
@@ -170,8 +176,8 @@ function Component({ label, value, gdp }: { label: string; value: number; gdp: n
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-[var(--color-ink-faint)]">{label}</dt>
+    <div className="min-w-0">
+      <dt className="text-[11px] text-[var(--color-ink-faint)]">{label}</dt>
       <dd className="tnum font-medium">{value}</dd>
     </div>
   );

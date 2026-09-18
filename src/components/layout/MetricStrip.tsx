@@ -11,7 +11,13 @@ function trendOf(delta: number, threshold = 0.05): Trend {
   return 'flat';
 }
 
-/** 상단 핵심 지표 줄. 게임 시작 3초 안에 국가 상태를 읽을 수 있게 하는 게 목적이다. */
+/**
+ * 핵심 지표 줄.
+ *
+ * 모바일: GDP·성장률·물가·실업률·국가부채·지지율 6개를 2열 그리드로 압축한다.
+ * 인구는 개요·인구 화면에서 확인할 수 있으므로 좁은 화면에서는 뺀다.
+ * sm 이상: 인구를 포함한 7개를 한 줄로 펼친다.
+ */
 export function MetricStrip() {
   const history = useGameStore((store) => store.game?.history ?? []);
   const nation = useGameStore((store) =>
@@ -25,6 +31,13 @@ export function MetricStrip() {
   const series = (pick: (point: (typeof history)[number]) => number) => recent.map(pick);
 
   const perCapita = (nation.economy.gdp * 1_000_000_000) / Math.max(nation.population.total, 1);
+  const delta = (current: number, before: number | undefined, digits = 1) =>
+    before === undefined
+      ? undefined
+      : {
+          value: `${Math.abs(current - before).toFixed(digits)}%p`,
+          trend: trendOf(current - before),
+        };
 
   return (
     <div className="grid grid-cols-2 divide-x divide-y border-b bg-[var(--color-surface)] sm:grid-cols-4 lg:grid-cols-7 lg:divide-y-0">
@@ -38,49 +51,22 @@ export function MetricStrip() {
         label="성장률"
         value={formatPercent(nation.economy.gdpGrowth)}
         sub={`잠재 ${formatPercent(nation.economy.potentialGrowth)}`}
-        delta={
-          previous
-            ? {
-                value: `${Math.abs(nation.economy.gdpGrowth - previous.gdpGrowth).toFixed(1)}%p`,
-                trend: trendOf(nation.economy.gdpGrowth - previous.gdpGrowth),
-              }
-            : undefined
-        }
+        delta={delta(nation.economy.gdpGrowth, previous?.gdpGrowth)}
         chart={<Sparkline values={series((p) => p.gdpGrowth)} tone="accent" />}
-      />
-      <Stat
-        label="인구"
-        value={formatPopulation(nation.population.total)}
-        sub={`출산율 ${nation.population.fertilityRate.toFixed(2)}`}
-        chart={<Sparkline values={series((p) => p.population)} tone="neutral" />}
       />
       <Stat
         label="물가"
         value={formatPercent(nation.economy.inflation)}
         sub={`기준금리 ${nation.economy.policyRate.toFixed(2)}%`}
         invert
-        delta={
-          previous
-            ? {
-                value: `${Math.abs(nation.economy.inflation - previous.inflation).toFixed(1)}%p`,
-                trend: trendOf(nation.economy.inflation - previous.inflation),
-              }
-            : undefined
-        }
+        delta={delta(nation.economy.inflation, previous?.inflation)}
         chart={<Sparkline values={series((p) => p.inflation)} tone="neutral" />}
       />
       <Stat
         label="실업률"
         value={formatPercent(nation.economy.unemployment)}
         invert
-        delta={
-          previous
-            ? {
-                value: `${Math.abs(nation.economy.unemployment - previous.unemployment).toFixed(1)}%p`,
-                trend: trendOf(nation.economy.unemployment - previous.unemployment),
-              }
-            : undefined
-        }
+        delta={delta(nation.economy.unemployment, previous?.unemployment)}
         chart={<Sparkline values={series((p) => p.unemployment)} tone="neutral" />}
       />
       <Stat
@@ -88,30 +74,24 @@ export function MetricStrip() {
         value={`${nation.fiscal.debtToGdp.toFixed(0)}%`}
         sub={`조달금리 ${nation.fiscal.interestRate.toFixed(2)}%`}
         invert
-        delta={
-          previous
-            ? {
-                value: `${Math.abs(nation.fiscal.debtToGdp - previous.debtToGdp).toFixed(1)}%p`,
-                trend: trendOf(nation.fiscal.debtToGdp - previous.debtToGdp),
-              }
-            : undefined
-        }
+        delta={delta(nation.fiscal.debtToGdp, previous?.debtToGdp)}
         chart={<Sparkline values={series((p) => p.debtToGdp)} tone="neutral" />}
       />
       <Stat
         label="지지율"
         value={formatPercent(nation.politics.approval, 0)}
         sub={`안정성 ${nation.politics.stability.toFixed(0)}`}
-        delta={
-          previous
-            ? {
-                value: `${Math.abs(nation.politics.approval - previous.approval).toFixed(1)}%p`,
-                trend: trendOf(nation.politics.approval - previous.approval),
-              }
-            : undefined
-        }
+        delta={delta(nation.politics.approval, previous?.approval)}
         chart={<Sparkline values={series((p) => p.approval)} tone="accent" />}
       />
+      <div className="hidden sm:block">
+        <Stat
+          label="인구"
+          value={formatPopulation(nation.population.total)}
+          sub={`출산율 ${nation.population.fertilityRate.toFixed(2)}`}
+          chart={<Sparkline values={series((p) => p.population)} tone="neutral" />}
+        />
+      </div>
     </div>
   );
 }

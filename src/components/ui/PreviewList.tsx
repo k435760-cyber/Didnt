@@ -18,9 +18,9 @@ export function PreviewList({ preview }: { preview: PolicyPreview }) {
   }
 
   return (
-    <div className="rounded-md border bg-[var(--color-surface-muted)] px-3 py-2.5 text-[11px]">
+    <div className="rounded-md border bg-[var(--color-surface-muted)] px-3 py-2.5 text-[12px] md:text-[11px]">
       {preview.certain.map((item) => (
-        <div key={item.label} className="flex items-baseline gap-2 pb-1.5">
+        <div key={item.label} className="flex flex-wrap items-baseline gap-x-2 pb-1.5">
           <span className="text-[var(--color-ink-faint)]">{item.label}</span>
           <span className="tnum font-medium">{item.value}</span>
         </div>
@@ -29,7 +29,7 @@ export function PreviewList({ preview }: { preview: PolicyPreview }) {
       {[...grouped.entries()].map(([horizon, entries]) => (
         <div key={horizon} className="flex items-baseline gap-2 py-0.5">
           <span className="w-8 shrink-0 text-[var(--color-ink-faint)]">{horizon}</span>
-          <span className="flex flex-wrap gap-x-3 gap-y-0.5">
+          <span className="flex min-w-0 flex-wrap gap-x-3 gap-y-0.5">
             {entries.map((entry) => (
               <span key={`${horizon}-${entry.label}`} className="flex items-center gap-1">
                 <span

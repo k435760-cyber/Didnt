@@ -33,6 +33,20 @@
 
 :root {
   color-scheme: light;
+
+  /* 하단 고정 UI 높이. 본문 padding-bottom 과 bar 위치 계산이 이 값들을 공유한다. */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --bottom-nav-height: 0px;
+  --turn-bar-height: 56px;
+}
+
+/* 모바일에서만 하단 내비게이션이 자리를 차지한다. */
+@media (max-width: 767.98px) {
+  :root {
+    --bottom-nav-height: 58px;
+    --turn-bar-height: 52px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -72,6 +86,15 @@ body {
   height: 100%;
 }
 
+/*
+ * 가로 스크롤 방지.
+ * clip 은 hidden 과 달리 스크롤 컨테이너를 만들지 않아 position: sticky 를 깨지 않는다.
+ * 레이아웃 자체는 overflow 가 생기지 않도록 짜되, 긴 숫자 같은 예외 상황의 안전망으로 둔다.
+ */
+html {
+  overflow-x: clip;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -92,6 +115,8 @@ input[type='range'] {
   border-radius: 999px;
   background: var(--color-line-strong);
   outline: none;
+  background-clip: content-box;
+  touch-action: pan-y;
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -115,7 +140,43 @@ input[type='range']::-moz-range-thumb {
   cursor: pointer;
 }
 
+/*
+ * 손가락으로 조작하는 환경에서는 thumb 을 키우고, 조작 가능한 요소의
+ * 최소 높이를 확보한다. 마우스 환경(pointer: fine)의 데스크톱 밀도는 건드리지 않는다.
+ */
+@media (pointer: coarse) {
+  input[type='range']::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+    border-width: 3px;
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-width: 3px;
+  }
+
+  /*
+   * box-sizing: border-box 기준. 높이 44px 중 가운데 4px 만 트랙으로 칠해진다.
+   * 음수 margin 을 쓰면 래퍼 높이와 트랙 중심이 어긋나 허용범위 오버레이가 밀리므로 쓰지 않는다.
+   */
+  input[type='range'] {
+    height: 44px;
+    padding: 20px 0;
+  }
+
+  button {
+    min-height: 40px;
+  }
+}
+
 input[type='range']:disabled::-webkit-slider-thumb {
+  border-color: var(--color-line-strong);
+  cursor: not-allowed;
+}
+
+input[type='range']:disabled::-moz-range-thumb {
   border-color: var(--color-line-strong);
   cursor: not-allowed;
 }
@@ -145,4 +206,59 @@ input[type='range']:disabled::-webkit-slider-thumb {
 
 .rise {
   animation: rise 180ms ease-out;
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sheet-up {
+  animation: sheet-up 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .sheet-up {
+    animation: none;
+  }
+}
+
+/* 본문이 하단 고정 UI(진행 바 + 내비게이션 + safe-area)에 가리지 않도록 한다. */
+.app-main {
+  padding-bottom: calc(
+    var(--turn-bar-height) + var(--bottom-nav-height) + var(--safe-bottom) + 16px
+  );
+}
+
+/* 진행 바는 모바일에서 하단 내비게이션 위에 놓인다. */
+.turn-bar {
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+}
+
+@media (min-width: 768px) {
+  .turn-bar {
+    bottom: 0;
+    padding-bottom: var(--safe-bottom);
+  }
+}
+
+.bottom-nav {
+  padding-bottom: var(--safe-bottom);
+}
+
+/* 가로 스크롤이 필요한 칩 줄에서 스크롤바를 감춘다(스크롤 자체는 유지). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

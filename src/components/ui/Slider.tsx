@@ -42,13 +42,13 @@ export function Slider({
   const toPercent = (v: number) => ((v - min) / span) * 100;
 
   return (
-    <div className="py-2.5">
+    <div className="py-2 md:py-2.5">
       <div className="flex items-baseline justify-between gap-3">
-        <label className="text-[13px] font-medium">{label}</label>
-        <div className="flex items-baseline gap-2">
+        <label className="min-w-0 truncate text-[14px] font-medium md:text-[13px]">{label}</label>
+        <div className="flex shrink-0 items-baseline gap-2">
           {hasDelta && (
             <span
-              className="tnum text-[11px] font-medium"
+              className="tnum text-[12px] font-medium md:text-[11px]"
               style={{ color: delta > 0 ? 'var(--color-accent)' : 'var(--color-caution)' }}
             >
               {delta > 0 ? '+' : ''}
@@ -56,14 +56,15 @@ export function Slider({
               {deltaSuffix ?? suffix}
             </span>
           )}
-          <span className="tnum text-[13px] font-semibold">
+          <span className="tnum text-[15px] font-semibold md:text-[13px]">
             {value.toFixed(digits)}
             {suffix}
           </span>
         </div>
       </div>
 
-      <div className="relative mt-2">
+      {/* 세로 여백이 아니라 input 자체의 padding 으로 터치 영역을 확보한다(globals.css 참고). */}
+      <div className="relative mt-1 md:mt-2">
         {allowed && (
           <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2">
             <div
@@ -89,7 +90,7 @@ export function Slider({
         />
       </div>
 
-      {hint && <div className="mt-1.5">{hint}</div>}
+      {hint && <div className="mt-2 md:mt-1.5">{hint}</div>}
     </div>
   );
 }

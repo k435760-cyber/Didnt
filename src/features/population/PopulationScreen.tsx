@@ -21,8 +21,12 @@ export function PopulationScreen() {
   const elderly = population.total * (population.elderlyShare / 100);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
-      <Panel title="총인구 추이" description="출생·사망·순이민의 합으로 분기마다 갱신됩니다.">
+    <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-2">
+      <Panel
+        title="총인구 추이"
+        description="출생·사망·순이민의 합으로 분기마다 갱신됩니다."
+        hideDescriptionOnMobile
+      >
         <LineChart
           labels={labels}
           format={(v) => `${(v / 1_000_000).toFixed(0)}M`}
@@ -33,7 +37,7 @@ export function PopulationScreen() {
       </Panel>
 
       <Panel title="인구 지표">
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-[12px]">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-[12px] md:gap-x-6">
           <Fact label="총인구" value={formatPopulation(population.total)} />
           <Fact label="합계출산율" value={population.fertilityRate.toFixed(2)} />
           <Fact label="조출생률" value={`${birthRate.toFixed(1)} / 1,000명`} />
@@ -64,7 +68,7 @@ export function PopulationScreen() {
           />
           <Segment label="고령" share={population.elderlyShare} color="var(--color-series-2)" />
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--color-ink-muted)]">
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--color-ink-muted)] md:gap-x-4">
           <Legend
             color="var(--color-series-3)"
             label={`유소년 ${formatPercent(Math.max(100 - population.workingAgeShare - population.elderlyShare, 0))}`}
@@ -83,9 +87,10 @@ export function PopulationScreen() {
       <Panel
         title="인구가 경제에 미치는 경로"
         description="인구는 GDP와 별개로 움직이지만, 노동력과 생산성을 통해 잠재성장률을 결정합니다."
+        hideDescriptionOnMobile
         className="xl:col-span-2"
       >
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3 md:gap-4">
           <Path
             title="노동력"
             body={`생산가능인구 ${formatPopulation(workingAge)}. 이 규모의 증가율이 잠재성장률의 절반을 구성합니다. 현재 잠재성장률은 ${formatPercent(nation.economy.potentialGrowth)}입니다.`}
@@ -106,8 +111,8 @@ export function PopulationScreen() {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-[var(--color-ink-faint)]">{label}</dt>
+    <div className="min-w-0">
+      <dt className="text-[11px] text-[var(--color-ink-faint)]">{label}</dt>
       <dd className="tnum font-medium">{value}</dd>
     </div>
   );
@@ -134,8 +139,10 @@ function Legend({ color, label }: { color: string; label: string }) {
 function Path({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-md border bg-[var(--color-surface-muted)] px-3.5 py-3">
-      <h4 className="text-[12px] font-semibold">{title}</h4>
-      <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-ink-muted)]">{body}</p>
+      <h4 className="text-[13px] font-semibold md:text-[12px]">{title}</h4>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--color-ink-muted)] md:text-[11px]">
+        {body}
+      </p>
     </div>
   );
 }

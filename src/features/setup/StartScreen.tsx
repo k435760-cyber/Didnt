@@ -38,11 +38,19 @@ export function StartScreen() {
   );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
-      <header className="flex items-start justify-between gap-6">
+    <main
+      className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-6 md:px-6 md:py-10"
+      style={{
+        paddingTop: 'calc(var(--safe-top) + 24px)',
+        paddingBottom: 'calc(var(--safe-bottom) + 24px)',
+      }}
+    >
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">국가 운영 시뮬레이터</h1>
-          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+          <h1 className="text-[22px] font-semibold tracking-tight md:text-2xl">
+            국가 운영 시뮬레이터
+          </h1>
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[var(--color-ink-muted)] md:text-sm">
             1턴은 1분기입니다. 세율과 예산을 정하고, 경제·인구·외교가 서로 어떻게 반응하는지
             확인하며 임기를 이어가세요. 같은 시드에서는 항상 같은 일이 벌어집니다.
           </p>
@@ -50,9 +58,9 @@ export function StartScreen() {
         <AuthButton />
       </header>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
+      <section className="mt-6 grid min-w-0 gap-5 md:mt-8 md:gap-6 lg:grid-cols-[1fr_320px]">
         <div>
-          <h2 className="mb-3 text-xs font-semibold tracking-wide text-[var(--color-ink-muted)]">
+          <h2 className="mb-2.5 text-[12px] font-semibold tracking-wide text-[var(--color-ink-muted)] md:mb-3">
             국가 선택
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -64,7 +72,7 @@ export function StartScreen() {
                   key={id}
                   type="button"
                   onClick={() => setSelected(id)}
-                  className="flex items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors"
+                  className="flex min-h-[56px] items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors md:px-3.5 md:py-3"
                   style={{
                     borderColor: active ? 'var(--color-accent)' : 'var(--color-line)',
                     backgroundColor: active ? 'var(--color-accent-soft)' : 'var(--color-surface)',
@@ -72,8 +80,8 @@ export function StartScreen() {
                 >
                   <Flag country={id} size={28} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">{country.name}</span>
-                    <span className="tnum block text-[11px] text-[var(--color-ink-faint)]">
+                    <span className="block text-[14px] font-medium">{country.name}</span>
+                    <span className="tnum block truncate text-[11px] text-[var(--color-ink-faint)]">
                       GDP {formatMoney(country.gdp)} · 인구 {formatPopulation(country.population)}
                     </span>
                   </span>
@@ -92,10 +100,10 @@ export function StartScreen() {
                 <Badge tone="accent">{PERSONALITY_LABELS[data.personality]}</Badge>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-3 text-[13px] leading-relaxed text-[var(--color-ink-muted)] md:text-xs">
               {BRIEFS[selected]}
             </p>
-            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px] md:text-[11px]">
               <Fact
                 label="1인당 GDP"
                 value={`${Math.round(perCapita).toLocaleString('ko-KR')} USD`}
@@ -122,9 +130,9 @@ export function StartScreen() {
               value={seed}
               onChange={(event) => setSeed(event.target.value.slice(0, 32))}
               placeholder="비워두면 무작위로 생성됩니다"
-              className="mt-1.5 w-full rounded-md border bg-[var(--color-surface)] px-2.5 py-1.5 text-[13px] outline-none focus:border-[var(--color-accent)]"
+              className="mt-1.5 h-11 w-full rounded-md border bg-[var(--color-surface)] px-3 text-[15px] outline-none focus:border-[var(--color-accent)] md:h-auto md:px-2.5 md:py-1.5 md:text-[13px]"
             />
-            <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-ink-faint)]">
+            <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--color-ink-faint)] md:text-[11px]">
               같은 시드 + 같은 선택 = 같은 결과. 전략을 비교할 때 쓰세요.
             </p>
             <Button
@@ -168,7 +176,7 @@ export function StartScreen() {
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[var(--color-ink-faint)]">{label}</dt>
+      <dt className="truncate text-[var(--color-ink-faint)]">{label}</dt>
       <dd className="tnum font-medium">{value}</dd>
     </div>
   );
@@ -189,13 +197,15 @@ function SaveRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-muted)]"
+      className="flex min-h-[52px] w-full items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-muted)]"
     >
       <span>
-        <span className="block text-[12px] font-medium">{label}</span>
+        <span className="block text-[13px] font-medium">{label}</span>
         <span className="block text-[11px] text-[var(--color-ink-faint)]">{meta}</span>
       </span>
-      <span className="text-[10px] text-[var(--color-ink-faint)]">{formatDateTime(time)}</span>
+      <span className="shrink-0 text-[11px] text-[var(--color-ink-faint)]">
+        {formatDateTime(time)}
+      </span>
     </button>
   );
 }

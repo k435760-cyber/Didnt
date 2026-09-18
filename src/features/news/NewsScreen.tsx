@@ -28,8 +28,12 @@ export function NewsScreen() {
   const ordered = [...news].reverse();
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-      <Panel title="뉴스" description="분기마다 지표 변화와 사건을 기사 형태로 정리합니다.">
+    <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-[1.4fr_1fr]">
+      <Panel
+        title="뉴스"
+        description="분기마다 지표 변화와 사건을 기사 형태로 정리합니다."
+        hideDescriptionOnMobile
+      >
         <ul className="divide-y">
           {ordered.map((item) => {
             const year = startYear + Math.floor(item.turn / TURNS_PER_YEAR);
@@ -38,12 +42,14 @@ export function NewsScreen() {
               <li key={`${item.turn}-${item.id}`} className="py-3 first:pt-0">
                 <div className="flex items-center gap-2">
                   <Badge tone={TONE[item.tone]}>{SECTION_LABEL[item.section]}</Badge>
-                  <span className="tnum text-[10px] text-[var(--color-ink-faint)]">
+                  <span className="tnum text-[11px] text-[var(--color-ink-faint)]">
                     {year}년 {quarter}분기
                   </span>
                 </div>
-                <h3 className="mt-1.5 text-[13px] font-semibold leading-snug">{item.headline}</h3>
-                <p className="mt-1 text-[12px] leading-relaxed text-[var(--color-ink-muted)]">
+                <h3 className="mt-1.5 text-[14px] font-semibold leading-snug md:text-[13px]">
+                  {item.headline}
+                </h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink-muted)] md:text-[12px]">
                   {item.body}
                 </p>
               </li>
@@ -52,9 +58,13 @@ export function NewsScreen() {
         </ul>
       </Panel>
 
-      <Panel title="이벤트 기록" description="발생한 사건과 내가 내린 결정입니다.">
+      <Panel
+        title="이벤트 기록"
+        description="발생한 사건과 내가 내린 결정입니다."
+        hideDescriptionOnMobile
+      >
         {eventHistory.length === 0 ? (
-          <p className="text-xs text-[var(--color-ink-faint)]">아직 기록된 사건이 없습니다.</p>
+          <p className="text-[12px] text-[var(--color-ink-faint)]">아직 기록된 사건이 없습니다.</p>
         ) : (
           <ul className="divide-y">
             {[...eventHistory].reverse().map((entry, index) => {
@@ -62,12 +72,12 @@ export function NewsScreen() {
               const quarter = (entry.turn % TURNS_PER_YEAR) + 1;
               return (
                 <li key={`${entry.eventId}-${entry.turn}-${index}`} className="py-2.5 first:pt-0">
-                  <span className="tnum text-[10px] text-[var(--color-ink-faint)]">
+                  <span className="tnum text-[11px] text-[var(--color-ink-faint)]">
                     {year}년 {quarter}분기
                   </span>
-                  <h3 className="text-[12px] font-medium">{entry.title}</h3>
+                  <h3 className="text-[13px] font-medium md:text-[12px]">{entry.title}</h3>
                   {entry.choiceLabel && (
-                    <p className="mt-0.5 text-[11px] text-[var(--color-accent)]">
+                    <p className="mt-0.5 text-[12px] text-[var(--color-accent)] md:text-[11px]">
                       선택: {entry.choiceLabel}
                     </p>
                   )}

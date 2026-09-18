@@ -12,32 +12,53 @@ interface ModalProps {
   width?: number;
 }
 
+/**
+ * 데스크톱에서는 가운데 정렬 다이얼로그, 모바일에서는 바텀 시트로 동작한다.
+ * 모바일 높이는 safe-area 를 뺀 값으로 제한해 시트가 화면 밖으로 나가지 않게 한다.
+ */
 export function Modal({ open, title, subtitle, children, onClose, width = 620 }: ModalProps) {
   useEffect(() => {
-    if (!open || !onClose) return undefined;
+    if (!open) return undefined;
+
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+
     const handler = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener('keydown', handler);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 sm:items-center sm:p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="rise max-h-[88vh] w-full overflow-y-auto rounded-xl border bg-[var(--color-surface)] shadow-xl"
-        style={{ maxWidth: width, borderColor: 'var(--color-line)' }}
+        className="sheet-up flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border bg-[var(--color-surface)] shadow-xl sm:max-h-[88vh] sm:rounded-xl"
+        style={{
+          maxWidth: width,
+          borderColor: 'var(--color-line)',
+          paddingBottom: 'var(--safe-bottom)',
+        }}
       >
-        <header className="border-b px-6 py-4">
-          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-          {subtitle && <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{subtitle}</p>}
+        <header className="shrink-0 border-b px-4 py-3.5 sm:px-6 sm:py-4">
+          <div className="mx-auto mb-2.5 h-1 w-9 rounded-full bg-[var(--color-line-strong)] sm:hidden" />
+          <h2 className="text-[16px] font-semibold tracking-tight md:text-base">{title}</h2>
+          {subtitle && (
+            <p className="mt-1 text-[12px] text-[var(--color-ink-muted)] md:text-xs">{subtitle}</p>
+          )}
         </header>
-        <div className="px-6 py-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
+          {children}
+        </div>
       </div>
     </div>
   );

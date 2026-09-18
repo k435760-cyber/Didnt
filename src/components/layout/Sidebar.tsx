@@ -1,19 +1,12 @@
 'use client';
 
-import { useGameStore, type Screen } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
+import { NAV_ITEMS } from './navItems';
 
-const ITEMS: { key: Screen; label: string }[] = [
-  { key: 'overview', label: '국가 개요' },
-  { key: 'economy', label: '경제' },
-  { key: 'budget', label: '예산' },
-  { key: 'tax', label: '세금' },
-  { key: 'population', label: '인구' },
-  { key: 'diplomacy', label: '외교' },
-  { key: 'military', label: '군사' },
-  { key: 'statistics', label: '통계' },
-  { key: 'news', label: '뉴스' },
-];
-
+/**
+ * 데스크톱/태블릿(md 이상) 전용 좌측 내비게이션.
+ * 모바일에서는 BottomNav 가 이 역할을 대신한다.
+ */
 export function Sidebar() {
   const screen = useGameStore((store) => store.screen);
   const setScreen = useGameStore((store) => store.setScreen);
@@ -23,9 +16,9 @@ export function Sidebar() {
   return (
     <nav
       aria-label="주 메뉴"
-      className="flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2 md:w-48 md:flex-col md:overflow-visible md:border-b-0 md:border-r md:px-3 md:py-4"
+      className="hidden shrink-0 flex-col gap-1 border-r px-3 py-4 md:flex md:w-48"
     >
-      {ITEMS.map((item) => {
+      {NAV_ITEMS.map((item) => {
         const active = screen === item.key;
         const badge = item.key === 'military' && wars > 0 ? String(wars) : null;
         const alert = item.key === 'news' && pendingEvent !== null;
@@ -36,7 +29,7 @@ export function Sidebar() {
             type="button"
             onClick={() => setScreen(item.key)}
             aria-current={active ? 'page' : undefined}
-            className="flex shrink-0 items-center justify-between gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors md:w-full"
+            className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors"
             style={{
               backgroundColor: active ? 'var(--color-accent-soft)' : 'transparent',
               color: active ? 'var(--color-accent)' : 'var(--color-ink-muted)',

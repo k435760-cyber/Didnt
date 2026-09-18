@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { TopBar } from '@/components/layout/TopBar';
 import { MetricStrip } from '@/components/layout/MetricStrip';
-import { Button } from '@/components/ui/Button';
 import { OverviewScreen } from '@/features/overview/OverviewScreen';
 import { EconomyScreen } from '@/features/economy/EconomyScreen';
 import { BudgetScreen } from '@/features/budget/BudgetScreen';
@@ -41,29 +41,37 @@ export function GameShell() {
     return () => window.clearTimeout(timer);
   }, [notice, dismissNotice]);
 
+  // 화면을 바꾸면 이전 화면의 스크롤 위치가 남지 않도록 맨 위로 되돌린다.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [screen]);
+
   const Screen = SCREENS[screen];
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-[100dvh] flex-col">
       <TopBar />
       <MetricStrip />
 
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex min-w-0 flex-1 flex-col md:flex-row">
         <Sidebar />
-        <main className="min-w-0 flex-1 px-5 py-5 pb-24">
+        <main className="app-main min-w-0 flex-1 px-3.5 py-3.5 md:px-5 md:py-5">
           <Screen />
         </main>
       </div>
 
       <TurnSummaryBar />
+      <BottomNav />
       <EventModal />
       <GameOverModal />
 
       {notice && (
         <div
           role="status"
-          className="rise fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-md px-3.5 py-2 text-[12px] shadow-lg"
+          className="rise fixed left-1/2 z-[45] max-w-[min(88%,420px)] -translate-x-1/2 rounded-md px-3.5 py-2 text-center text-[12px] shadow-lg"
           style={{
+            bottom:
+              'calc(var(--turn-bar-height) + var(--bottom-nav-height) + var(--safe-bottom) + 12px)',
             backgroundColor: notice.tone === 'error' ? 'var(--color-negative)' : 'var(--color-ink)',
             color: 'var(--color-surface)',
           }}
@@ -74,5 +82,3 @@ export function GameShell() {
     </div>
   );
 }
-
-export { Button };

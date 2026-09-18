@@ -16,7 +16,7 @@ import { useGameStore } from '@/store/gameStore';
  * 로그인하면 저장 슬롯이 계정별 네임스페이스로 분리되어, 같은 브라우저에서
  * 여러 사람이 각자의 진행 상황을 유지할 수 있다.
  */
-export function AuthButton() {
+export function AuthButton({ size = 'md' }: { size?: 'sm' | 'md' } = {}) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export function AuthButton() {
         <span className="hidden text-[11px] text-[var(--color-ink-muted)] sm:inline">
           {user.name}
         </span>
-        <Button size="sm" variant="ghost" onClick={() => void signOut()}>
+        <Button size={size} variant="ghost" onClick={() => void signOut()}>
           로그아웃
         </Button>
       </div>
@@ -68,7 +68,12 @@ export function AuthButton() {
   return (
     <div className="flex items-center gap-2">
       {error && <span className="text-[11px] text-[var(--color-negative)]">{error}</span>}
-      <Button size="sm" variant="secondary" onClick={() => void handleSignIn()} disabled={pending}>
+      <Button
+        size={size}
+        variant="secondary"
+        onClick={() => void handleSignIn()}
+        disabled={pending}
+      >
         <GoogleMark />
         {pending ? '연결 중…' : 'Google 로그인'}
       </Button>

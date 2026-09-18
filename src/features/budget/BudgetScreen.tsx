@@ -5,7 +5,7 @@ import { Panel } from '@/components/ui/Panel';
 import { Slider } from '@/components/ui/Slider';
 import { PreviewList } from '@/components/ui/PreviewList';
 import { BUDGET_CATEGORIES } from '@/types/fiscal';
-import type { BudgetCategory } from '@/types';
+import type { BudgetCategory, NationState } from '@/types';
 import { BUDGET_EFFECTS, BUDGET_LABELS, FISCAL } from '@/config/fiscal';
 import { previewBudgetChange } from '@/simulation/government/preview';
 import { totalBudgetRatio } from '@/simulation/economy/spending';
@@ -25,19 +25,19 @@ export function BudgetScreen() {
   const total = totalBudgetRatio(budget);
   const appliedTotal = totalBudgetRatio(applied);
   const limit = FISCAL.changeLimits.budgetPerTurn;
-  const effects = BUDGET_EFFECTS[focused];
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
+    <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-[1.3fr_1fr]">
       <Panel
         title="예산 배분"
         description={`항목별 GDP 대비 지출 비율입니다. 한 분기에 항목당 ±${limit}%p 까지 조정할 수 있습니다.`}
+        hideDescriptionOnMobile
         actions={
           <div className="text-right">
-            <span className="block whitespace-nowrap text-[10px] text-[var(--color-ink-faint)]">
+            <span className="block whitespace-nowrap text-[11px] text-[var(--color-ink-faint)] md:text-[10px]">
               총지출 (GDP 대비)
             </span>
-            <span className="tnum text-sm font-semibold">
+            <span className="tnum whitespace-nowrap text-sm font-semibold">
               {total.toFixed(1)}%
               {Math.abs(total - appliedTotal) >= 0.05 && (
                 <span
@@ -58,6 +58,8 @@ export function BudgetScreen() {
           {BUDGET_CATEGORIES.map((category) => (
             <div
               key={category}
+              /* 터치에는 hover 가 없으므로 포인터 접촉과 포커스 양쪽에서 선택된다. */
+              onPointerDown={() => setFocused(category)}
               onFocusCapture={() => setFocused(category)}
               onMouseEnter={() => setFocused(category)}
             >
@@ -75,52 +77,38 @@ export function BudgetScreen() {
                 }}
                 onChange={(value) => setBudget(category, value)}
               />
+              {/*
+                모바일에서는 오른쪽 상세 패널이 화면 한참 아래에 있으므로,
+                조작 중인 항목의 효과를 슬라이더 바로 밑에 붙여 보여준다.
+              */}
+              {focused === category && (
+                <div className="pb-3 xl:hidden">
+                  <PreviewList
+                    preview={previewBudgetChange(
+                      category,
+                      applied[category],
+                      budget[category],
+                      nation,
+                    )}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
       </Panel>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-3.5 md:gap-5">
         <Panel
           title={`${BUDGET_LABELS[focused]} 예산`}
-          description="항목을 가리키면 내용이 바뀝니다."
+          description="항목을 선택하면 내용이 바뀝니다."
+          hideDescriptionOnMobile
         >
-          <PreviewList
-            preview={previewBudgetChange(focused, applied[focused], budget[focused], nation)}
-          />
-
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <h4 className="text-[11px] font-semibold text-[var(--color-positive)]">장점</h4>
-              <ul className="mt-1.5 flex flex-col gap-1">
-                {effects.gains.map((gain) => (
-                  <li
-                    key={gain}
-                    className="text-[11px] leading-relaxed text-[var(--color-ink-muted)]"
-                  >
-                    · {gain}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-[11px] font-semibold text-[var(--color-negative)]">단점</h4>
-              <ul className="mt-1.5 flex flex-col gap-1">
-                {effects.costs.map((cost) => (
-                  <li
-                    key={cost}
-                    className="text-[11px] leading-relaxed text-[var(--color-ink-muted)]"
-                  >
-                    · {cost}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <CategoryDetail category={focused} applied={applied} budget={budget} nation={nation} />
         </Panel>
 
         <Panel title="재정 요약">
-          <dl className="grid grid-cols-2 gap-x-5 gap-y-3 text-[12px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[12px] md:gap-x-5">
             <Fact label="세입 (연율)" value={formatMoney(nation.fiscal.revenue)} />
             <Fact label="지출 (연율)" value={formatMoney(nation.fiscal.expenditure)} />
             <Fact label="재정수지" value={formatMoney(nation.fiscal.balance)} />
@@ -141,10 +129,56 @@ export function BudgetScreen() {
   );
 }
 
+/** 선택한 예산 항목의 예상 효과와 장단점. 모바일/데스크톱에서 같은 내용을 쓴다. */
+function CategoryDetail({
+  category,
+  applied,
+  budget,
+  nation,
+}: {
+  category: BudgetCategory;
+  applied: Record<BudgetCategory, number>;
+  budget: Record<BudgetCategory, number>;
+  nation: NationState;
+}) {
+  const effects = BUDGET_EFFECTS[category];
+
+  return (
+    <>
+      <PreviewList
+        preview={previewBudgetChange(category, applied[category], budget[category], nation)}
+      />
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 md:mt-4 md:gap-4">
+        <div>
+          <h4 className="text-[11px] font-semibold text-[var(--color-positive)]">장점</h4>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {effects.gains.map((gain) => (
+              <li key={gain} className="text-[12px] leading-relaxed text-[var(--color-ink-muted)]">
+                · {gain}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-[11px] font-semibold text-[var(--color-negative)]">단점</h4>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {effects.costs.map((cost) => (
+              <li key={cost} className="text-[12px] leading-relaxed text-[var(--color-ink-muted)]">
+                · {cost}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-[var(--color-ink-faint)]">{label}</dt>
+    <div className="min-w-0">
+      <dt className="text-[11px] text-[var(--color-ink-faint)]">{label}</dt>
       <dd className="tnum font-medium">{value}</dd>
     </div>
   );

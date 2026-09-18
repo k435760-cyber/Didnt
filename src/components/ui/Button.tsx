@@ -21,9 +21,13 @@ const VARIANTS: Record<Variant, string> = {
     'bg-[var(--color-negative)] text-white hover:opacity-90 disabled:opacity-40 border border-transparent',
 };
 
+/**
+ * 모바일에서는 터치 목표 크기를 확보하기 위해 높이를 키우고,
+ * md 이상에서는 기존의 조밀한 데스크톱 높이로 되돌린다.
+ */
 const SIZES: Record<Size, string> = {
-  sm: 'h-7 px-2.5 text-[11px]',
-  md: 'h-9 px-3.5 text-[13px]',
+  sm: 'h-9 px-3 text-[12px] md:h-7 md:px-2.5 md:text-[11px]',
+  md: 'h-11 px-4 text-[14px] md:h-9 md:px-3.5 md:text-[13px]',
 };
 
 export function Button({
@@ -36,7 +40,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:cursor-not-allowed ${VARIANTS[variant]} ${SIZES[size]} ${className ?? ''}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:cursor-not-allowed ${VARIANTS[variant]} ${SIZES[size]} ${className ?? ''}`}
       {...props}
     />
   );
