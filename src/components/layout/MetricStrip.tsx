@@ -14,9 +14,8 @@ function trendOf(delta: number, threshold = 0.05): Trend {
 /**
  * 핵심 지표 줄.
  *
- * 모바일: GDP·성장률·물가·실업률·국가부채·지지율 6개를 2열 그리드로 압축한다.
- * 인구는 개요·인구 화면에서 확인할 수 있으므로 좁은 화면에서는 뺀다.
- * sm 이상: 인구를 포함한 7개를 한 줄로 펼친다.
+ * md 이상에서만 보인다. 모바일에서는 개요 화면의 '핵심 지표' 격자가 같은 역할을 하며,
+ * 화면마다 같은 줄을 반복해 세로 공간을 잡아먹지 않도록 했다.
  */
 export function MetricStrip() {
   const history = useGameStore((store) => store.game?.history ?? []);
@@ -40,7 +39,7 @@ export function MetricStrip() {
         };
 
   return (
-    <div className="grid grid-cols-2 divide-x divide-y border-b bg-[var(--color-surface)] sm:grid-cols-4 lg:grid-cols-7 lg:divide-y-0">
+    <div className="hidden divide-x divide-y border-b bg-[var(--color-surface)] md:grid md:grid-cols-4 lg:grid-cols-7 lg:divide-y-0">
       <Stat
         label="GDP"
         value={formatCompactMoney(nation.economy.gdp)}
@@ -84,7 +83,7 @@ export function MetricStrip() {
         delta={delta(nation.politics.approval, previous?.approval)}
         chart={<Sparkline values={series((p) => p.approval)} tone="accent" />}
       />
-      <div className="hidden sm:block">
+      <div>
         <Stat
           label="인구"
           value={formatPopulation(nation.population.total)}

@@ -30,7 +30,7 @@ export function NewsScreen() {
   return (
     <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-[1.4fr_1fr]">
       <Panel
-        title="뉴스"
+        title="국정 뉴스"
         description="분기마다 지표 변화와 사건을 기사 형태로 정리합니다."
         hideDescriptionOnMobile
       >
@@ -59,7 +59,7 @@ export function NewsScreen() {
       </Panel>
 
       <Panel
-        title="이벤트 기록"
+        title="결정 기록"
         description="발생한 사건과 내가 내린 결정입니다."
         hideDescriptionOnMobile
       >

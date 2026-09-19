@@ -62,7 +62,7 @@ export function TaxScreen() {
   return (
     <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-2">
       <Panel
-        title="세율"
+        title="조세 정책"
         description={`한 분기에 세목당 ±${limit}%p 까지 조정할 수 있습니다.`}
         hideDescriptionOnMobile
       >

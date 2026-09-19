@@ -3,7 +3,7 @@
 import type { ButtonHTMLAttributes } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type Size = 'sm' | 'md';
+type Size = 'sm' | 'md' | 'cta';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -28,6 +28,8 @@ const VARIANTS: Record<Variant, string> = {
 const SIZES: Record<Size, string> = {
   sm: 'h-9 px-3 text-[12px] md:h-7 md:px-2.5 md:text-[11px]',
   md: 'h-11 px-4 text-[14px] md:h-9 md:px-3.5 md:text-[13px]',
+  /** 턴 진행처럼 화면에서 가장 중요한 행동. 모바일에서 확실히 눈에 띄는 크기를 갖는다. */
+  cta: 'h-12 px-4 text-[15px] font-semibold tracking-tight md:h-9 md:px-4 md:text-[13px]',
 };
 
 export function Button({

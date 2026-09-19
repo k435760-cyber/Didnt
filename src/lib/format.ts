@@ -69,6 +69,15 @@ export function formatPeriod(year: number, quarter: number): string {
   return `${year}년 ${quarter}분기`;
 }
 
+/**
+ * 집권 기간 표기. '집권 4년 0분기'처럼 어색하고 긴 문자열 대신
+ * 좁은 화면에서도 잘리지 않는 'N년차'로 쓴다.
+ */
+export function formatTenure(quarters: number): string {
+  if (!Number.isFinite(quarters) || quarters < 0) return '집권 1년차';
+  return `집권 ${Math.floor(quarters / 4) + 1}년차`;
+}
+
 export function formatDateTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';

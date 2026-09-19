@@ -10,7 +10,8 @@ import { PRIMARY_SCREENS, SECONDARY_SCREENS, navItem } from './navItems';
  * 모바일 전용 하단 고정 내비게이션.
  *
  * 자주 쓰는 4개 화면을 직접 노출하고, 나머지는 '더보기' 시트에 넣는다.
- * 높이는 --bottom-nav-height 와 맞춰 두었고, safe-area 만큼 아래 여백을 더한다.
+ * 높이(h-14 = 56px)는 --bottom-nav-height 와 정확히 같아야 한다. 어긋나면 진행 바가
+ * 내비 위로 겹쳐 올라온다. safe-area 만큼 아래 여백을 더한다.
  */
 export function BottomNav() {
   const screen = useGameStore((store) => store.screen);
@@ -127,7 +128,7 @@ export function BottomNav() {
               type="button"
               onClick={() => go(key)}
               aria-current={active ? 'page' : undefined}
-              className="flex h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
+              className="flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
               style={{ color: active ? 'var(--color-accent)' : 'var(--color-ink-faint)' }}
             >
               <NavIcon screen={key} />
@@ -141,7 +142,7 @@ export function BottomNav() {
           onClick={() => setSheetOpen(true)}
           aria-expanded={sheetOpen}
           aria-haspopup="dialog"
-          className="relative flex h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
+          className="relative flex h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
           style={{ color: secondaryActive ? 'var(--color-accent)' : 'var(--color-ink-faint)' }}
         >
           <NavIcon screen="more" />

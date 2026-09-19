@@ -36,7 +36,7 @@ export function PopulationScreen() {
         />
       </Panel>
 
-      <Panel title="인구 지표">
+      <Panel title="인구 구조">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-[12px] md:gap-x-6">
           <Fact label="총인구" value={formatPopulation(population.total)} />
           <Fact label="합계출산율" value={population.fertilityRate.toFixed(2)} />

@@ -47,7 +47,7 @@ export function DiplomacyScreen() {
   return (
     <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-[1fr_1.2fr]">
       <Panel
-        title="관계도"
+        title="국제 관계"
         description="-100(적대)에서 100(동맹) 사이로 관리됩니다."
         hideDescriptionOnMobile
       >

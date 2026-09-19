@@ -29,7 +29,7 @@ export function BudgetScreen() {
   return (
     <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-[1.3fr_1fr]">
       <Panel
-        title="예산 배분"
+        title="예산 편성"
         description={`항목별 GDP 대비 지출 비율입니다. 한 분기에 항목당 ±${limit}%p 까지 조정할 수 있습니다.`}
         hideDescriptionOnMobile
         actions={
@@ -107,7 +107,7 @@ export function BudgetScreen() {
           <CategoryDetail category={focused} applied={applied} budget={budget} nation={nation} />
         </Panel>
 
-        <Panel title="재정 요약">
+        <Panel title="재정 상태">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[12px] md:gap-x-5">
             <Fact label="세입 (연율)" value={formatMoney(nation.fiscal.revenue)} />
             <Fact label="지출 (연율)" value={formatMoney(nation.fiscal.expenditure)} />

@@ -3,17 +3,21 @@
 import { Flag } from '@/components/Flag';
 import { Button } from '@/components/ui/Button';
 import { AuthButton } from '@/features/auth/AuthButton';
-import { formatMoney, formatPercent, formatPeriod } from '@/lib/format';
 import { TURNS_PER_YEAR } from '@/config/constants';
+import { TONE_COLOR, assessApproval } from '@/lib/assessment';
+import { formatMoney, formatPercent, formatPeriod, formatTenure } from '@/lib/format';
 import { useGameStore } from '@/store/gameStore';
 
 /**
- * 상단 바.
- * 모바일에서는 국가·분기·지지율·재정수지만 한 줄에 담고,
- * 저장/불러오기/초기화/로그인은 하단 '더보기' 시트로 옮겼다.
+ * 상단 국가 표시줄.
+ *
+ * 모바일에서는 개요 화면에 같은 정보를 담은 국가 헤더가 따로 있으므로 숨기고,
+ * 다른 화면에서만 '지금 어느 나라의 몇 분기인가'를 잡아 두는 최소 줄로 남는다.
+ * 데스크톱에서는 저장/불러오기까지 포함한 기존 밀도를 유지한다.
  */
 export function TopBar() {
   const country = useGameStore((store) => store.game?.playerCountry ?? null);
+  const screen = useGameStore((store) => store.screen);
   const name = useGameStore((store) =>
     store.game ? store.game.nations[store.game.playerCountry].name : '',
   );
@@ -28,6 +32,9 @@ export function TopBar() {
   const gdp = useGameStore((store) =>
     store.game ? store.game.nations[store.game.playerCountry].economy.gdp : 1,
   );
+  const quartersInOffice = useGameStore((store) =>
+    store.game ? store.game.nations[store.game.playerCountry].politics.quartersInOffice : 0,
+  );
   const seed = useGameStore((store) => store.game?.seed ?? '');
 
   const saveGame = useGameStore((store) => store.saveGame);
@@ -39,10 +46,11 @@ export function TopBar() {
   const year = startYear + Math.floor(turn / TURNS_PER_YEAR);
   const quarter = (turn % TURNS_PER_YEAR) + 1;
   const balanceRatio = (balance / Math.max(gdp, 1)) * 100;
+  const approvalState = assessApproval(approval);
 
   return (
     <header
-      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-[var(--color-surface)] px-3.5 py-2.5 md:gap-x-6 md:gap-y-3 md:px-5 md:py-3"
+      className={`${screen === 'overview' ? 'hidden md:flex' : 'flex'} flex-wrap items-center gap-x-4 gap-y-2 border-b bg-[var(--color-surface)] px-3.5 py-2.5 md:gap-x-6 md:gap-y-3 md:px-5 md:py-3`}
       style={{ paddingTop: 'calc(var(--safe-top) + 10px)' }}
     >
       <div className="flex min-w-0 items-center gap-2.5">
@@ -53,7 +61,9 @@ export function TopBar() {
           </h1>
           <p className="tnum truncate text-[11px] text-[var(--color-ink-faint)]">
             <span>{formatPeriod(year, quarter)}</span>
-            <span className="hidden md:inline"> · 시드 {seed}</span>
+            <span className="hidden md:inline">
+              {` · ${formatTenure(quartersInOffice)} · 시드 ${seed}`}
+            </span>
           </p>
         </div>
       </div>
@@ -62,14 +72,23 @@ export function TopBar() {
         <HeaderFact
           label="지지율"
           value={formatPercent(approval, 0)}
-          tone={approval >= 50 ? 'positive' : approval >= 30 ? 'neutral' : 'negative'}
+          hint={approvalState.label}
+          color={TONE_COLOR[approvalState.tone]}
         />
-        <HeaderFact
-          label="재정수지"
-          value={`${formatMoney(balance)}`}
-          hint={`${balanceRatio >= 0 ? '+' : ''}${balanceRatio.toFixed(1)}%`}
-          tone={balance >= 0 ? 'positive' : balanceRatio < -5 ? 'negative' : 'neutral'}
-        />
+        <div className="hidden md:block">
+          <HeaderFact
+            label="재정수지"
+            value={formatMoney(balance)}
+            hint={`${balanceRatio >= 0 ? '+' : ''}${balanceRatio.toFixed(1)}%`}
+            color={
+              balance >= 0
+                ? 'var(--color-positive)'
+                : balanceRatio < -5
+                  ? 'var(--color-negative)'
+                  : 'var(--color-ink)'
+            }
+          />
+        </div>
       </div>
 
       {/* 데스크톱 전용 게임 조작. 모바일은 하단 더보기 시트에 같은 기능이 있다. */}
@@ -93,20 +112,13 @@ function HeaderFact({
   label,
   value,
   hint,
-  tone,
+  color,
 }: {
   label: string;
   value: string;
   hint?: string;
-  tone: 'positive' | 'negative' | 'neutral';
+  color: string;
 }) {
-  const color =
-    tone === 'positive'
-      ? 'var(--color-positive)'
-      : tone === 'negative'
-        ? 'var(--color-negative)'
-        : 'var(--color-ink)';
-
   return (
     <div className="leading-tight">
       <span className="block text-[11px] text-[var(--color-ink-faint)] md:text-[10px]">
@@ -114,7 +126,7 @@ function HeaderFact({
       </span>
       <span className="tnum block whitespace-nowrap text-[13px] font-semibold" style={{ color }}>
         {value}
-        {hint && <span className="ml-1 font-normal opacity-80">({hint})</span>}
+        {hint && <span className="ml-1 text-[11px] font-normal opacity-80">{hint}</span>}
       </span>
     </div>
   );

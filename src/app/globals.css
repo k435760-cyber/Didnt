@@ -29,6 +29,12 @@
   --color-series-2: #eb6834;
   --color-series-3: #1baf7a;
   --color-grid: #eceff3;
+
+  /* 전략 시뮬레이션 톤: 국가 상태 패널과 결정 패널에 쓰는 짙은 표면. */
+  --color-command: #1b2431;
+  --color-command-ink: #e8ecf3;
+  --color-command-muted: #94a3b8;
+  --color-command-line: #2c384a;
 }
 
 :root {
@@ -38,14 +44,15 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
   --bottom-nav-height: 0px;
+  /* 진행 바는 내용에 따라 높이가 달라지므로 TurnBar 가 실측값을 여기에 써 넣는다. */
   --turn-bar-height: 56px;
 }
 
 /* 모바일에서만 하단 내비게이션이 자리를 차지한다. */
 @media (max-width: 767.98px) {
   :root {
-    --bottom-nav-height: 58px;
-    --turn-bar-height: 52px;
+    /* 버튼 56px + 상단 경계선 1px. BottomNav 의 h-14 와 반드시 같이 움직여야 한다. */
+    --bottom-nav-height: 57px;
   }
 }
 
@@ -74,6 +81,11 @@
     --color-series-2: #d95926;
     --color-series-3: #199e70;
     --color-grid: #1f262f;
+
+    --color-command: #1a2029;
+    --color-command-ink: #e9edf3;
+    --color-command-muted: #8d99a9;
+    --color-command-line: #2b333f;
   }
 }
 
@@ -261,4 +273,39 @@ input[type='range']:disabled::-moz-range-thumb {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/*
+ * 섹션 제목 앞의 짧은 강조선.
+ * 카드를 겹겹이 쓰지 않고도 구획이 나뉘어 보이게 하는 최소한의 장치다.
+ */
+.rule-before::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 11px;
+  margin-right: 7px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  vertical-align: -1px;
+}
+
+/* 값이 바뀐 지표를 한 번 훑고 지나가는 정도의 피드백. */
+@keyframes flash-value {
+  0% {
+    background-color: var(--color-accent-soft);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.flash {
+  animation: flash-value 900ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash {
+    animation: none;
+  }
 }

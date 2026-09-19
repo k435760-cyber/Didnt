@@ -29,7 +29,7 @@ export function MilitaryScreen() {
 
   return (
     <div className="grid min-w-0 gap-3.5 md:gap-5 xl:grid-cols-2">
-      <Panel title="군사 현황">
+      <Panel title="국방 태세">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-[12px] md:gap-x-6">
           <Fact label="군사력 지수" value={military.power.toFixed(0)} />
           <Fact label="병력" value={`${formatNumber(Math.round(military.troops))}명`} />
@@ -50,7 +50,7 @@ export function MilitaryScreen() {
       </Panel>
 
       <Panel
-        title="국가별 군사력"
+        title="세계 군사력 순위"
         description="전쟁 결과는 군사력만이 아니라 기술·경제력·동맹·피로도로 결정됩니다."
         hideDescriptionOnMobile
       >

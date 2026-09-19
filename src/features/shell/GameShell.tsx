@@ -15,7 +15,8 @@ import { MilitaryScreen } from '@/features/military/MilitaryScreen';
 import { StatisticsScreen } from '@/features/statistics/StatisticsScreen';
 import { NewsScreen } from '@/features/news/NewsScreen';
 import { EventModal, GameOverModal } from '@/features/events/EventModal';
-import { TurnSummaryBar } from '@/features/shell/TurnSummaryBar';
+import { TurnBar } from '@/features/shell/TurnBar';
+import { QuarterResult } from '@/features/shell/QuarterResult';
 import { useGameStore, type Screen } from '@/store/gameStore';
 
 const SCREENS: Record<Screen, () => React.ReactElement | null> = {
@@ -60,8 +61,9 @@ export function GameShell() {
         </main>
       </div>
 
-      <TurnSummaryBar />
+      <TurnBar />
       <BottomNav />
+      <QuarterResult />
       <EventModal />
       <GameOverModal />
 
