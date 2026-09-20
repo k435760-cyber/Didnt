@@ -19,7 +19,7 @@ const BENEFITS: { icon: Parameters<typeof Icon>[0]['name']; title: string; body:
 ];
 
 export function AuthModal({ onClose }: { onClose: () => void }) {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, configured } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +58,18 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
+        {!configured && (
+          <div className="banner banner--warn">
+            <span className="banner__icon">
+              <Icon name="alert" size={16} />
+            </span>
+            <span className="banner__text">
+              이 빌드에는 백엔드 주소가 들어 있지 않아 로그인을 쓸 수 없어요. 계산·저장·내보내기는
+              그대로 동작합니다.
+            </span>
+          </div>
+        )}
+
         {error && (
           <div className="banner banner--bad">
             <span className="banner__icon">
@@ -81,7 +93,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
           className="btn btn--google"
           data-autofocus
           onClick={() => void start()}
-          disabled={busy}
+          disabled={busy || !configured}
         >
           {busy ? <Icon name="refresh" size={17} className="spin" /> : <GoogleMark size={18} />}
           {busy ? '이동 중…' : 'Google 계정으로 계속'}

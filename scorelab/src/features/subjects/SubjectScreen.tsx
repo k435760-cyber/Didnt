@@ -17,10 +17,12 @@ import { Q, ZERO } from '../../lib/rational';
 import { boundaryAware, hueVar, score as fmtScore, subjectColor } from '../../lib/format';
 import { Icon } from '../../ui/Icon';
 import { Banner, Empty, Meter } from '../../ui/primitives';
+import { useWorkspace } from '../../state/workspace';
 import { useSubjectActions } from './actions';
 
 export function SubjectScreen({ subject }: { subject: Subject }) {
   const actions = useSubjectActions();
+  const { moveItem } = useWorkspace();
   const summary = useMemo(() => summarize(subject.items), [subject.items]);
   const issues = useMemo(() => subjectIssues(subject), [subject]);
   const target = Q.parse(subject.target);
@@ -33,6 +35,8 @@ export function SubjectScreen({ subject }: { subject: Subject }) {
     [subject.cuts],
   );
 
+  // 평가가 하나도 없으면 0점·E등급 같은 "계산된 척하는" 값을 보여 주지 않는다.
+  const hasItems = subject.items.length > 0;
   const grade = gradeFor(summary.projected, subject.cuts);
   const nextCut = nextGradeGap(summary.projected, subject.cuts);
   const color = subjectColor(subject);
@@ -66,11 +70,13 @@ export function SubjectScreen({ subject }: { subject: Subject }) {
         </div>
       </header>
 
-      {issues.map((issue) => (
-        <Banner key={issue.message} tone={issue.level === 'error' ? 'bad' : 'warn'}>
-          {issue.message}
-        </Banner>
-      ))}
+      {issues
+        .filter((issue) => !(subject.items.length === 0 && issue.level === 'warn'))
+        .map((issue) => (
+          <Banner key={issue.message} tone={issue.level === 'error' ? 'bad' : 'warn'}>
+            {issue.message}
+          </Banner>
+        ))}
 
       <div className="split">
         <div className="split__col">
@@ -78,43 +84,59 @@ export function SubjectScreen({ subject }: { subject: Subject }) {
             <div className="hero__top">
               <div style={{ minWidth: 0 }}>
                 <p className="hero__label">현재 점수</p>
-                <div className="hero__score">
-                  <span className="hero__value">{boundaryAware(summary.projected, cutValues)}</span>
-                  <span className="hero__unit">점</span>
-                </div>
+                {hasItems ? (
+                  <div className="hero__score">
+                    <span className="hero__value">
+                      {boundaryAware(summary.projected, cutValues)}
+                    </span>
+                    <span className="hero__unit">점</span>
+                  </div>
+                ) : (
+                  <p className="hero__pending">아직 계산할 평가가 없어요</p>
+                )}
               </div>
-              {grade && (
+              {hasItems && grade && (
                 <div className="hero__grade" title={`${grade.name} (${grade.lower}점 이상)`}>
                   {grade.name}
                 </div>
               )}
             </div>
 
-            <div className="hero__meter">
-              <Meter
-                value={summary.projected.toNumber()}
-                marks={target ? [target.toNumber()] : []}
-              />
-              <div className="hero__meter-labels">
-                <span>0</span>
-                {target && <span>목표 {fmtScore(target)}</span>}
-                <span>100</span>
+            {hasItems && (
+              <div className="hero__meter">
+                <Meter
+                  value={summary.projected.toNumber()}
+                  marks={target ? [target.toNumber()] : []}
+                  label={`${subject.name} 현재 점수`}
+                />
+                <div className="hero__meter-labels">
+                  <span>0</span>
+                  {target && <span>목표 {fmtScore(target)}</span>}
+                  <span>100</span>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="hero__range">
-              <span>
-                확정만: <b>{fmtScore(summary.secured)}점</b>
-              </span>
-              <span>
-                최저: <b>{fmtScore(summary.floor)}점</b>
-              </span>
-              <span>
-                최고: <b>{fmtScore(summary.ceiling)}점</b>
-              </span>
-            </div>
+            {hasItems ? (
+              <div className="hero__range">
+                <span>
+                  확정만: <b>{fmtScore(summary.secured)}점</b>
+                </span>
+                <span>
+                  최저: <b>{fmtScore(summary.floor)}점</b>
+                </span>
+                <span>
+                  최고: <b>{fmtScore(summary.ceiling)}점</b>
+                </span>
+              </div>
+            ) : (
+              <p className="muted" style={{ margin: 0 }}>
+                평가를 추가하면 지금 점수, 가능한 점수 범위, 목표까지 남은 점수가 여기에 나타납니다.
+                {target ? ` (목표 ${fmtScore(target)}점)` : ''}
+              </p>
+            )}
 
-            {nextCut && (
+            {hasItems && nextCut && (
               <div className="banner banner--info" style={{ marginTop: 2 }}>
                 <span className="banner__icon">
                   <Icon name="trending" size={16} />
@@ -163,12 +185,15 @@ export function SubjectScreen({ subject }: { subject: Subject }) {
               </div>
             ) : (
               <div className="eval-list">
-                {subject.items.map((item) => (
+                {subject.items.map((item, index) => (
                   <EvaluationRow
                     key={item.id}
                     item={item}
+                    first={index === 0}
+                    last={index === subject.items.length - 1}
                     onOpen={() => void actions.editEvaluation(subject, item)}
                     onQuickScore={() => void actions.quickScore(subject, item)}
+                    onMove={(delta) => moveItem(subject.id, item.id, delta)}
                   />
                 ))}
               </div>
@@ -177,34 +202,38 @@ export function SubjectScreen({ subject }: { subject: Subject }) {
         </div>
 
         <div className="split__col">
-          <div className="tiles">
-            <Tile
-              label="확보 점수"
-              icon="lock"
-              value={fmtScore(summary.secured)}
-              note="확정된 평가만"
-            />
-            <Tile
-              label="예상 포함"
-              icon="sparkles"
-              value={fmtScore(summary.projected)}
-              note={`예상 ${subject.items.filter((i) => i.status === 'expected').length}개 반영`}
-            />
-            <Tile
-              label="남은 비율"
-              icon="clock"
-              value={`${fmtScore(summary.pendingWeight)}%`}
-              note={`평가 ${summary.pending.length}개`}
-            />
-            <Tile
-              label="가능 범위"
-              icon="layers"
-              value={`${fmtScore(summary.floor)}~${fmtScore(summary.ceiling)}`}
-              note="남은 평가 0점~만점"
-            />
-          </div>
+          {hasItems && (
+            <>
+              <div className="tiles">
+                <Tile
+                  label="확보 점수"
+                  icon="lock"
+                  value={fmtScore(summary.secured)}
+                  note="확정된 평가만"
+                />
+                <Tile
+                  label="예상 포함"
+                  icon="sparkles"
+                  value={fmtScore(summary.projected)}
+                  note={`예상 ${subject.items.filter((i) => i.status === 'expected').length}개 반영`}
+                />
+                <Tile
+                  label="남은 비율"
+                  icon="clock"
+                  value={`${fmtScore(summary.pendingWeight)}%`}
+                  note={`평가 ${summary.pending.length}개`}
+                />
+                <Tile
+                  label="가능 범위"
+                  icon="layers"
+                  value={`${fmtScore(summary.floor)}~${fmtScore(summary.ceiling)}`}
+                  note="남은 평가 0점~만점"
+                />
+              </div>
 
-          {subject.items.length > 0 && <ContributionCard items={subject.items} />}
+              <ContributionCard items={subject.items} />
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -236,12 +265,18 @@ function Tile({
 
 function EvaluationRow({
   item,
+  first,
+  last,
   onOpen,
   onQuickScore,
+  onMove,
 }: {
   item: Evaluation;
+  first: boolean;
+  last: boolean;
   onOpen: () => void;
   onQuickScore: () => void;
+  onMove: (delta: number) => void;
 }) {
   const broken = hasErrors(evaluationErrors(item));
   const max = Q.parse(item.max);
@@ -292,6 +327,26 @@ function EvaluationRow({
         )}
         {contrib && <span className="eval__contrib">+{fmtScore(contrib)}점</span>}
       </button>
+      <span className="eval__order">
+        <button
+          type="button"
+          className="eval__move"
+          onClick={() => onMove(-1)}
+          disabled={first}
+          aria-label={`${item.name || '평가'} 위로`}
+        >
+          <Icon name="chevron-up" size={14} />
+        </button>
+        <button
+          type="button"
+          className="eval__move"
+          onClick={() => onMove(1)}
+          disabled={last}
+          aria-label={`${item.name || '평가'} 아래로`}
+        >
+          <Icon name="chevron-down" size={14} />
+        </button>
+      </span>
     </div>
   );
 }

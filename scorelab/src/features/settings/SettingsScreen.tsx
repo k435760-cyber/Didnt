@@ -16,9 +16,18 @@ import type { PwaState } from '../pwa/usePwa';
 import { DataModal } from './DataModal';
 import { AboutModal } from './AboutModal';
 
+/** 주소가 비어 있거나 형식이 틀려도 화면이 죽지 않게 감싼다. */
+const backendHost = (() => {
+  try {
+    return new URL(SUPABASE_URL).host;
+  } catch {
+    return null;
+  }
+})();
+
 export function SettingsScreen({ pwa }: { pwa: PwaState }) {
   const { settings, set, toggle } = useSettings();
-  const { account, status: authStatus } = useAuth();
+  const { account, status: authStatus, configured } = useAuth();
   const { status: cloudStatus, lastReport, sync } = useCloud();
   const { workspace } = useWorkspace();
   const modal = useModal();
@@ -59,17 +68,20 @@ export function SettingsScreen({ pwa }: { pwa: PwaState }) {
           ) : (
             <div className="stack">
               <p className="muted" style={{ margin: 0 }}>
-                로그인하지 않아도 모든 계산 기능을 쓸 수 있어요. 여러 기기에서 같은 데이터를 보려면
-                로그인하세요.
+                {configured
+                  ? '로그인하지 않아도 모든 계산 기능을 쓸 수 있어요. 여러 기기에서 같은 데이터를 보려면 로그인하세요.'
+                  : '이 빌드에는 백엔드 주소가 들어 있지 않아 로그인과 동기화를 쓸 수 없어요. 데이터는 이 기기에만 저장되니 가끔 내보내 두세요.'}
               </p>
-              <button
-                type="button"
-                className="btn btn--primary btn--block"
-                onClick={() => void openAccount()}
-              >
-                <Icon name="cloud" size={17} />
-                Google 계정으로 로그인
-              </button>
+              {configured && (
+                <button
+                  type="button"
+                  className="btn btn--primary btn--block"
+                  onClick={() => void openAccount()}
+                >
+                  <Icon name="cloud" size={17} />
+                  Google 계정으로 로그인
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -127,9 +139,11 @@ export function SettingsScreen({ pwa }: { pwa: PwaState }) {
             description={
               account
                 ? lastReport
-                  ? `마지막 동기화 ${relativeTime(lastReport.at)}`
-                  : '편집이 끝나면 자동으로 올립니다.'
-                : '로그인하면 켤 수 있어요.'
+                  ? `마지막 동기화 ${relativeTime(lastReport.at)} · 과목과 표시 설정을 함께 맞춥니다`
+                  : '편집이 끝나면 과목과 표시 설정을 자동으로 올립니다.'
+                : configured
+                  ? '로그인하면 켤 수 있어요.'
+                  : '이 빌드에서는 쓸 수 없어요.'
             }
           />
           {account && (
@@ -219,7 +233,8 @@ export function SettingsScreen({ pwa }: { pwa: PwaState }) {
       </section>
 
       <p className="muted" style={{ textAlign: 'center', paddingBottom: 8 }}>
-        {APP.name} v{APP.version} · 백엔드 {new URL(SUPABASE_URL).host}
+        {APP.name} v{APP.version}
+        {backendHost ? ` · 백엔드 ${backendHost}` : ' · 백엔드 없음'}
       </p>
     </div>
   );

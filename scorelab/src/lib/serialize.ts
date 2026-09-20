@@ -71,7 +71,6 @@ export function serializeSubject(subject: Subject) {
     memo: subject.memo,
     hue: subject.hue,
     target: Number(subject.target),
-    sample: subject.sample,
     createdAt: subject.createdAt,
     updatedAt: subject.updatedAt,
     cuts: subject.cuts.map((c) => ({ id: c.id, name: c.name, lower: Number(c.lower) })),
@@ -160,7 +159,6 @@ export function parseSubject(raw: unknown): Subject {
     target,
     createdAt,
     updatedAt,
-    sample: r.sample === true,
   });
 }
 

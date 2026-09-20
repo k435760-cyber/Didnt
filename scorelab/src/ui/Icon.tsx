@@ -28,6 +28,7 @@ export type IconName =
   | 'logout'
   | 'chevron-right'
   | 'chevron-down'
+  | 'chevron-up'
   | 'sparkles'
   | 'moon'
   | 'sun'
@@ -74,6 +75,7 @@ const PATHS: Record<IconName, string> = {
   logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
   'chevron-right': 'm9 18 6-6-6-6',
   'chevron-down': 'm6 9 6 6 6-6',
+  'chevron-up': 'm18 15-6-6-6 6',
   sparkles:
     'M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9zM19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8zM5 15.5l.6 1.4 1.4.6-1.4.6L5 19.5l-.6-1.4-1.4-.6 1.4-.6z',
   moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8',

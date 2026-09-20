@@ -1,9 +1,8 @@
 /** 앱 셸: 내비게이션, 화면 전환, 시작 시 처리해야 할 안내들. */
 import { useCallback, useEffect, useState } from 'react';
 import { APP } from './lib/config';
-import { makeCuts, makeSubject } from './lib/engine';
 import { Icon, type IconName } from './ui/Icon';
-import { Avatar } from './ui/primitives';
+import { Avatar, Empty } from './ui/primitives';
 import { useModal } from './ui/ModalProvider';
 import { useToast } from './ui/Toast';
 import { useAuth } from './state/auth';
@@ -32,7 +31,7 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
-  const { workspace, activeSubject, saveState, loadIssue, dismissLoadIssue, dispatch, addSubject } =
+  const { workspace, activeSubject, saveState, loadIssue, dismissLoadIssue, dispatch } =
     useWorkspace();
   const { account, status: authStatus } = useAuth();
   const { status: cloudStatus } = useCloud();
@@ -99,7 +98,7 @@ export default function App() {
           }}
           onDuplicate={(subject) => {
             close();
-            actions.duplicateSubject(subject);
+            void actions.duplicateSubject(subject);
           }}
           onDelete={(subject) => {
             close();
@@ -120,30 +119,40 @@ export default function App() {
     [dispatch],
   );
 
-  const ensureSubject = useCallback(() => {
-    const subject = makeSubject({ name: '새 과목', cuts: makeCuts() });
-    addSubject(subject);
-    setTab('subject');
-  }, [addSubject]);
+  // 과목을 만들고 나면 방금 만든 과목 화면으로 이어 준다.
+  const startSubject = useCallback(
+    () => void actions.createSubject().then((created) => created && setTab('subject')),
+    [actions],
+  );
 
   const screen = (() => {
     if (tab === 'dashboard') return <DashboardScreen onOpenSubject={openSubject} />;
     if (tab === 'settings') return <SettingsScreen pwa={pwa} />;
     if (!activeSubject) {
       return (
-        <div className="page">
-          <div className="card">
-            <div className="empty">
-              <span className="empty__icon">
-                <Icon name="layers" size={24} />
-              </span>
-              <span className="empty__title">과목이 없어요</span>
-              <span style={{ fontSize: 13 }}>과목을 하나 만들면 계산을 시작할 수 있어요.</span>
-              <button type="button" className="btn btn--primary" onClick={ensureSubject}>
-                <Icon name="plus" size={17} />
-                과목 만들기
-              </button>
+        <div className="page page--narrow">
+          <header className="page__head">
+            <div>
+              <h1 className="page__title">{tab === 'goal' ? '목표' : '과목'}</h1>
+              <p className="page__sub">아직 만든 과목이 없어요</p>
             </div>
+          </header>
+          <div className="card">
+            <Empty
+              icon="layers"
+              title="과목을 먼저 만들어 주세요"
+              description={
+                tab === 'goal'
+                  ? '과목과 평가를 넣으면 목표까지 몇 점이 필요한지 역산해 드릴게요.'
+                  : '과목을 하나 만들면 평가를 넣고 점수를 계산할 수 있어요.'
+              }
+              action={
+                <button type="button" className="btn btn--primary" onClick={startSubject}>
+                  <Icon name="plus" size={17} />
+                  과목 만들기
+                </button>
+              }
+            />
           </div>
         </div>
       );

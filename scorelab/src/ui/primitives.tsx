@@ -113,16 +113,20 @@ export function Meter({
   value,
   max = 100,
   marks = [],
+  label = '현재 점수',
 }: {
   value: number;
   max?: number;
   marks?: number[];
+  /** 스크린 리더가 읽을 이름. progressbar 는 이름이 없으면 무엇의 진행인지 알 수 없다. */
+  label?: string;
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <div
       className="meter"
       role="progressbar"
+      aria-label={label}
       aria-valuenow={Math.round(value * 10) / 10}
       aria-valuemin={0}
       aria-valuemax={max}

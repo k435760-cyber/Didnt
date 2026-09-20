@@ -12,16 +12,55 @@ import {
   makeSubject,
   minimumScoreFor,
   nextGradeGap,
+  emptyWorkspace,
   overallStats,
-  sampleSubject,
   simulate,
   solveFor,
   subjectIssues,
   summarize,
+  uid,
   weightTotal,
 } from './engine';
 
 const item = (patch: Parameters<typeof makeEvaluation>[0]) => makeEvaluation(patch);
+
+/** 실제로 다 채워 넣은 과목. 앱은 예시 데이터를 만들지 않으므로 테스트에서 직접 만든다. */
+const filledSubject = () =>
+  makeSubject({
+    name: '수학',
+    hue: 4,
+    target: '90',
+    cuts: makeCuts(),
+    items: [
+      item({
+        name: '1학기 중간고사',
+        category: 'written',
+        weight: '30',
+        max: '100',
+        status: 'confirmed',
+        score: '84',
+      }),
+      item({ name: '1학기 기말고사', category: 'written', weight: '30', max: '100' }),
+      item({
+        name: '서술형 수행',
+        category: 'performance',
+        weight: '20',
+        max: '20',
+        step: '0.5',
+        status: 'confirmed',
+        score: '18.5',
+      }),
+      item({
+        name: '탐구 보고서',
+        category: 'performance',
+        weight: '20',
+        max: '10',
+        step: '0.5',
+        status: 'expected',
+        score: '9',
+      }),
+    ],
+  });
 
 describe('기여도와 합계', () => {
   it('원점수를 반영 비율로 환산한다', () => {
@@ -286,8 +325,20 @@ describe('검증', () => {
     ).toBe(true);
   });
 
-  it('예시 과목은 오류 없이 계산된다', () => {
-    expect(subjectIssues(sampleSubject()).filter((i) => i.level === 'error')).toEqual([]);
+  it('제대로 채운 과목에는 오류가 없다', () => {
+    expect(subjectIssues(filledSubject()).filter((i) => i.level === 'error')).toEqual([]);
+  });
+});
+
+describe('처음 상태', () => {
+  it('예시 데이터 없이 빈 워크스페이스로 시작한다', () => {
+    const workspace = emptyWorkspace();
+    expect(workspace.subjects).toEqual([]);
+    expect(workspace.activeId).toBe('');
+  });
+
+  it('id 는 서버의 uuid 컬럼에 들어갈 수 있는 형식이다', () => {
+    expect(uid()).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   });
 });
 

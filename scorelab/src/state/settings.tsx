@@ -24,6 +24,23 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSync: true,
 };
 
+const THEMES: ThemeMode[] = ['system', 'light', 'dark'];
+
+/**
+ * 서버(sl_profiles.prefs)에서 내려온 설정을 믿지 않고 걸러 낸다.
+ * 모르는 키는 버리고, 타입이 맞는 값만 남긴다.
+ */
+export function sanitizeSettings(raw: unknown): Partial<Settings> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const source = raw as Record<string, unknown>;
+  const out: Partial<Settings> = {};
+  if (THEMES.includes(source.theme as ThemeMode)) out.theme = source.theme as ThemeMode;
+  for (const key of ['gradient', 'showSteps', 'autoSync'] as const) {
+    if (typeof source[key] === 'boolean') out[key] = source[key];
+  }
+  return out;
+}
+
 interface SettingsApi {
   settings: Settings;
   resolvedTheme: 'light' | 'dark';

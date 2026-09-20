@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  emptyWorkspace,
-  makeEvaluation,
-  makeSubject,
-  sampleSubject,
-  type Workspace,
-} from './engine';
+import { emptyWorkspace, makeCuts, makeEvaluation, makeSubject, type Workspace } from './engine';
 import { ImportError, mergeWorkspace, parseWorkspace, serialize } from './serialize';
 
 const workspaceOf = (...subjects: ReturnType<typeof makeSubject>[]): Workspace => ({
@@ -15,9 +9,20 @@ const workspaceOf = (...subjects: ReturnType<typeof makeSubject>[]): Workspace =
   updatedAt: new Date().toISOString(),
 });
 
+/** 값이 다 들어찬 과목. 앱에는 예시 데이터가 없으므로 테스트에서 만든다. */
+const filledSubject = () =>
+  makeSubject({
+    name: '수학',
+    cuts: makeCuts(),
+    items: [
+      makeEvaluation({ weight: '60', max: '100', status: 'confirmed', score: '84' }),
+      makeEvaluation({ weight: '40', max: '20', step: '0.5', status: 'expected', score: '18.5' }),
+    ],
+  });
+
 describe('직렬화 왕복', () => {
   it('내보낸 걸 그대로 다시 읽으면 같은 값이 나온다', () => {
-    const before = workspaceOf(sampleSubject());
+    const before = workspaceOf(filledSubject());
     const after = parseWorkspace(serialize(before));
     expect(after.subjects).toHaveLength(1);
     expect(after.subjects[0]!.name).toBe('수학');
@@ -41,7 +46,8 @@ describe('직렬화 왕복', () => {
   });
 
   it('빈 워크스페이스도 왕복한다', () => {
-    const empty = { ...emptyWorkspace(), subjects: [], activeId: '' };
+    const empty = emptyWorkspace();
+    expect(empty.subjects).toEqual([]);
     expect(parseWorkspace(serialize(empty)).subjects).toEqual([]);
   });
 });

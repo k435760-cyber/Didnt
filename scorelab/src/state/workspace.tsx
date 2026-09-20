@@ -76,7 +76,7 @@ export function reducer(state: Workspace, action: Action): Workspace {
     }
 
     case 'subject/patch':
-      return touchSubject(state, action.id, (s) => ({ ...s, ...action.patch, sample: false }));
+      return touchSubject(state, action.id, (s) => ({ ...s, ...action.patch }));
 
     case 'subject/remove': {
       const subjects = state.subjects.filter((s) => s.id !== action.id);
@@ -92,15 +92,12 @@ export function reducer(state: Workspace, action: Action): Workspace {
 
     case 'item/add':
       return touchSubject(state, action.subjectId, (s) =>
-        s.items.length >= LIMITS.items
-          ? s
-          : { ...s, items: [...s.items, action.item], sample: false },
+        s.items.length >= LIMITS.items ? s : { ...s, items: [...s.items, action.item] },
       );
 
     case 'item/patch':
       return touchSubject(state, action.subjectId, (s) => ({
         ...s,
-        sample: false,
         items: s.items.map((i) => (i.id === action.itemId ? { ...i, ...action.patch } : i)),
       }));
 
@@ -136,8 +133,8 @@ interface WorkspaceApi {
   loadIssue: LoadResult | null;
   dismissLoadIssue: () => void;
   dispatch: (action: Action) => void;
-  /** 자주 쓰는 조작들 */
-  addSubject: (subject: Subject) => void;
+  /** 자주 쓰는 조작들. 한도에 걸리면 false 를 돌려준다. */
+  addSubject: (subject: Subject) => boolean;
   removeSubject: (id: string) => { subject: Subject; index: number } | null;
   restoreSubject: (subject: Subject, index: number) => void;
   patchSubject: (id: string, patch: Partial<Subject>) => void;
@@ -206,6 +203,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [workspace.subjects],
   );
 
+  const addSubject = useCallback(
+    (subject: Subject) => {
+      if (workspace.subjects.length >= LIMITS.subjects) return false;
+      dispatch({ type: 'subject/add', subject });
+      return true;
+    },
+    [workspace.subjects.length],
+  );
+
   const addItem = useCallback(
     (subjectId: string, patch: Partial<Evaluation> = {}) => {
       const subject = workspace.subjects.find((s) => s.id === subjectId);
@@ -225,7 +231,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       loadIssue,
       dismissLoadIssue: () => setLoadIssue(null),
       dispatch,
-      addSubject: (subject) => dispatch({ type: 'subject/add', subject }),
+      addSubject,
       removeSubject,
       restoreSubject: (subject, index) => dispatch({ type: 'subject/restore', subject, index }),
       patchSubject: (id, patch) => dispatch({ type: 'subject/patch', id, patch }),
@@ -237,7 +243,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'item/move', subjectId, itemId, delta }),
       replaceWorkspace: (next) => dispatch({ type: 'replace', workspace: next }),
     }),
-    [workspace, activeSubject, saveState, loadIssue, removeSubject, addItem],
+    [workspace, activeSubject, saveState, loadIssue, addSubject, removeSubject, addItem],
   );
 
   return <WorkspaceContext.Provider value={api}>{children}</WorkspaceContext.Provider>;

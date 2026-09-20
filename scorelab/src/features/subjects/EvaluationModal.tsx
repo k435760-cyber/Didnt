@@ -208,16 +208,20 @@ export function EvaluationModal({
         )}
       </ModalBody>
       <ModalFoot>
-        {onDelete ? (
-          <button type="button" className="btn btn--danger" onClick={onDelete}>
+        {onDelete && (
+          <button
+            type="button"
+            className="btn btn--danger btn--icon"
+            style={{ flex: 'none' }}
+            aria-label="이 평가 삭제"
+            onClick={onDelete}
+          >
             <Icon name="trash" size={17} />
-            삭제
-          </button>
-        ) : (
-          <button type="button" className="btn" onClick={onCancel}>
-            취소
           </button>
         )}
+        <button type="button" className="btn" onClick={onCancel}>
+          취소
+        </button>
         <button type="submit" className="btn btn--primary" disabled={touched && invalid}>
           {mode === 'create' ? '추가' : '저장'}
         </button>

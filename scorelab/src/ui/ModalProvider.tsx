@@ -17,7 +17,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from './focus';
-import { ModalBody, ModalFoot, ModalHead, type ModalTone } from './Modal';
+import { ModalBody, ModalFoot, ModalHead, ModalIdProvider, type ModalTone } from './Modal';
 import type { IconName } from './Icon';
 
 export interface ModalOptions {
@@ -89,6 +89,9 @@ const EXIT_MS = 160;
 
 export function ModalProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<Entry[]>([]);
+  // closeAll 이 "지금 열려 있는 모달" 을 알아야 해서 최신 스택을 ref 로도 들고 있는다.
+  const stackRef = useRef<Entry[]>(stack);
+  stackRef.current = stack;
   const nextId = useRef(1);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
@@ -203,9 +206,14 @@ export function ModalProvider({ children }: { children: ReactNode }) {
       alert,
       confirm,
       prompt,
-      closeAll: () => setStack((current) => current.map((e) => ({ ...e, closing: true }))),
+      // 닫는 애니메이션을 거쳐 실제로 스택에서 빼고, 기다리던 Promise 도 모두 풀어 준다.
+      closeAll: () => {
+        for (const entry of stackRef.current) {
+          if (!entry.closing) dismiss(entry.id, undefined);
+        }
+      },
     };
-  }, [open]);
+  }, [open, dismiss]);
 
   // 모달이 하나라도 열려 있으면 뒤 배경 스크롤을 잠근다.
   useEffect(() => {
@@ -215,6 +223,62 @@ export function ModalProvider({ children }: { children: ReactNode }) {
       document.body.dataset.locked = 'false';
     };
   }, [stack]);
+
+  /*
+   * 휴대폰의 뒤로 가기로 모달을 닫는다. 이게 없으면 모달을 열어 둔 채 뒤로 가기를
+   * 눌렀을 때 앱 자체가 닫혀 버린다. 모달이 열려 있는 동안만 기록을 하나 밀어 넣고,
+   * 버튼으로 닫혔으면 그 기록을 다시 거둬들인다.
+   */
+  const pushed = useRef(false);
+  // 우리가 부른 back() 이 돌려보내는 popstate 는 모달을 닫는 신호가 아니다.
+  const selfPop = useRef(false);
+
+  useEffect(() => {
+    const anyOpen = stack.some((e) => !e.closing);
+    if (anyOpen) {
+      if (!pushed.current) {
+        pushed.current = true;
+        window.history.pushState({ scorelabModal: true }, '');
+      }
+      return;
+    }
+    if (!pushed.current) return;
+    /*
+     * 곧바로 되돌리지 않는다. 모달을 닫자마자 다른 모달을 여는 흐름
+     * (과목 전환 → 과목 추가, 평가 수정 → 삭제 확인)이 있어서, 한 틱 기다렸다가
+     * 그사이 새 모달이 열리면 되돌리기를 취소한다.
+     */
+    const timer = setTimeout(() => {
+      pushed.current = false;
+      if ((window.history.state as { scorelabModal?: boolean } | null)?.scorelabModal) {
+        selfPop.current = true;
+        window.history.back();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [stack]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (selfPop.current) {
+        selfPop.current = false;
+        return;
+      }
+      if (!pushed.current) return;
+      pushed.current = false;
+      const open = stackRef.current.filter((e) => !e.closing);
+      if (open.length === 0) return;
+      // 닫으면 안 되는 모달이 섞여 있으면 기록을 도로 밀어 넣어 뒤로 가기를 막는다.
+      if (open.some((e) => !e.options.dismissible)) {
+        pushed.current = true;
+        window.history.pushState({ scorelabModal: true }, '');
+        return;
+      }
+      api.closeAll();
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [api]);
 
   return (
     <ModalContext.Provider value={api}>
@@ -288,15 +352,11 @@ function ModalLayer({ entry, behind, onDismiss, onClose }: LayerProps) {
         tabIndex={-1}
       >
         <div className="modal__grip" aria-hidden="true" />
-        <ModalIdContext.Provider value={titleId}>{entry.render(control)}</ModalIdContext.Provider>
+        <ModalIdProvider value={titleId}>{entry.render(control)}</ModalIdProvider>
       </div>
     </div>
   );
 }
-
-/** 헤더가 자기 id 를 알 수 있게 해 aria-labelledby 가 항상 맞물리게 한다. */
-const ModalIdContext = createContext<string | undefined>(undefined);
-export const useModalTitleId = () => useContext(ModalIdContext);
 
 function PromptForm({
   options,

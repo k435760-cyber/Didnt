@@ -1,6 +1,14 @@
 /** 모달의 겉모양. 내용은 각 기능이 children 으로 넣는다. */
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
+
+/**
+ * 모달 컨테이너가 자기 aria-labelledby id 를 헤더에 내려 준다.
+ * 이게 없으면 dialog 의 aria-labelledby 가 존재하지 않는 id 를 가리킨다.
+ */
+const ModalIdContext = createContext<string | undefined>(undefined);
+export const ModalIdProvider = ModalIdContext.Provider;
+export const useModalTitleId = () => useContext(ModalIdContext);
 
 export type ModalTone = 'brand' | 'warn' | 'danger' | 'ok';
 
@@ -23,6 +31,9 @@ export function ModalHead({
   titleId,
   descId,
 }: ModalHeadProps) {
+  // 모달 컨테이너의 aria-labelledby 가 가리키는 id 를 그대로 받아 제목에 건다.
+  const fallbackId = useModalTitleId();
+  const headingId = titleId ?? fallbackId;
   return (
     <header className="modal__head">
       {icon && (
@@ -31,7 +42,7 @@ export function ModalHead({
         </div>
       )}
       <div className="modal__titles">
-        <h2 className="modal__title" id={titleId}>
+        <h2 className="modal__title" id={headingId}>
           {title}
         </h2>
         {description && (

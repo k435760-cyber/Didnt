@@ -4,9 +4,9 @@ import {
   contribution,
   evenScenario,
   gradeFor,
-  isCalculable,
   simulate,
   solveFor,
+  subjectIssues,
   summarize,
   type Evaluation,
   type Subject,
@@ -29,7 +29,11 @@ export function GoalScreen({ subject }: { subject: Subject }) {
   const [mode, setMode] = useState<Mode>('solve');
 
   const summary = useMemo(() => summarize(subject.items), [subject.items]);
-  const ready = isCalculable(subject);
+  const problems = useMemo(
+    () => subjectIssues(subject).filter((issue) => issue.level === 'error'),
+    [subject],
+  );
+  const ready = problems.length === 0;
   const color = subjectColor(subject);
 
   if (subject.items.length === 0) {
@@ -105,11 +109,11 @@ export function GoalScreen({ subject }: { subject: Subject }) {
         </div>
       </section>
 
-      {!ready && (
-        <Banner tone="bad">
-          입력값에 오류가 있어 계산할 수 없어요. 과목 화면에서 빨간 평가를 고쳐 주세요.
+      {problems.map((problem) => (
+        <Banner key={problem.message} tone="bad">
+          {problem.message}
         </Banner>
-      )}
+      ))}
 
       <Segmented
         block

@@ -15,9 +15,15 @@ import {
   type ReactNode,
 } from 'react';
 import { serialize } from '../lib/serialize';
-import { syncWorkspace, upsertProfile, wipeCloud, type SyncReport } from '../lib/sync';
+import {
+  fetchPrefs,
+  syncWorkspace,
+  upsertProfile,
+  wipeCloud,
+  type SyncReport,
+} from '../lib/sync';
 import { useAuth } from './auth';
-import { useSettings } from './settings';
+import { sanitizeSettings, useSettings } from './settings';
 import { useWorkspace } from './workspace';
 
 export type CloudStatus = 'off' | 'idle' | 'syncing' | 'error';
@@ -42,7 +48,7 @@ const AUTO_SYNC_DELAY = 4000;
 
 export function CloudProvider({ children }: { children: ReactNode }) {
   const { account, status: authStatus } = useAuth();
-  const { settings } = useSettings();
+  const { settings, merge } = useSettings();
   const { workspace, replaceWorkspace } = useWorkspace();
 
   const [status, setStatus] = useState<CloudStatus>('off');
@@ -54,6 +60,10 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   workspaceRef.current = workspace;
   const running = useRef(false);
   const lastPushed = useRef<string>('');
+  // 서버 설정을 내려받기 전에 이 기기 설정을 올려 덮어쓰지 않도록 하는 빗장.
+  const prefsReady = useRef(false);
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const sync = useCallback(
     async ({ silent = false } = {}) => {
@@ -89,14 +99,48 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       setStatus('off');
       setLastReport(null);
       lastPushed.current = '';
+      prefsReady.current = false;
       return;
     }
     setStatus('idle');
-    void upsertProfile(account.id, { display_name: account.name, avatar_url: account.avatar });
+    let cancelled = false;
+    void (async () => {
+      await upsertProfile(account.id, { display_name: account.name, avatar_url: account.avatar });
+      // 표시 설정도 계정에 딸려 다닌다. 서버 값이 있으면 먼저 받아 적용하고,
+      // 아직 없으면(첫 로그인) 이 기기의 설정을 올려 다음 기기가 이어받게 한다.
+      const remote = sanitizeSettings(await fetchPrefs(account.id));
+      if (cancelled) return;
+      if (Object.keys(remote).length) {
+        merge(remote);
+      } else {
+        await upsertProfile(account.id, {
+          display_name: account.name,
+          avatar_url: account.avatar,
+          prefs: settingsRef.current,
+        });
+      }
+      prefsReady.current = true;
+    })();
     if (settings.autoSync) void sync();
+    return () => {
+      cancelled = true;
+    };
     // account.id 가 바뀔 때만 다시 맞춘다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authStatus, account?.id]);
+
+  // 설정이 바뀌면 계정에 올린다. (다른 기기에서 열어도 같은 테마·표시 설정이 된다)
+  useEffect(() => {
+    if (!account || !prefsReady.current) return;
+    const timer = setTimeout(() => {
+      void upsertProfile(account.id, {
+        display_name: account.name,
+        avatar_url: account.avatar,
+        prefs: settings,
+      });
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [settings, account]);
 
   // 편집이 멈추면 조용히 다시 올린다.
   useEffect(() => {

@@ -11,6 +11,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { isSupabaseConfigured } from '../lib/config';
 import {
   describeAuthError,
   redirectTarget,
@@ -19,10 +20,15 @@ import {
   type Account,
 } from '../lib/supabase';
 
+const NOT_CONFIGURED =
+  '이 빌드에는 백엔드 주소가 들어 있지 않아 로그인과 동기화를 쓸 수 없어요. 계산 기능은 그대로 쓸 수 있습니다.';
+
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
 interface AuthApi {
   status: AuthStatus;
+  /** 이 빌드가 백엔드를 가지고 있어서 로그인을 제안해도 되는가 */
+  configured: boolean;
   account: Account | null;
   /** 마지막 인증 오류 (한국어) */
   error: string | null;
@@ -47,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     mounted.current = true;
+    // 백엔드 주소가 없는 빌드에서는 클라이언트를 만들지 않는다. (만들면 곧바로 던진다)
+    if (!isSupabaseConfigured()) {
+      setStatus('signed-out');
+      return;
+    }
     const client = supabase();
 
     client.auth
@@ -84,11 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const api = useMemo<AuthApi>(
     () => ({
       status,
+      configured: isSupabaseConfigured(),
       account,
       error,
       clearError: () => setError(null),
       signInWithGoogle: async () => {
         setError(null);
+        if (!isSupabaseConfigured()) {
+          setError(NOT_CONFIGURED);
+          throw new Error(NOT_CONFIGURED);
+        }
         try {
           const { error: authError } = await supabase().auth.signInWithOAuth({
             provider: 'google',
@@ -106,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         try {
-          await supabase().auth.signOut();
+          if (isSupabaseConfigured()) await supabase().auth.signOut();
         } finally {
           if (mounted.current) {
             setAccount(null);

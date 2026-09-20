@@ -1,6 +1,7 @@
 /** 과목·평가 관련 흐름(모달 → 확인 → 저장)을 한곳에 모았다. 화면들은 이걸 부른다. */
 import { useCallback } from 'react';
 import {
+  LIMITS,
   cloneSubject,
   evaluationErrors,
   makeCuts,
@@ -32,7 +33,20 @@ export function useSubjectActions() {
   const modal = useModal();
   const toast = useToast();
 
+  /** 과목 한도를 넘었으면 이유를 알리고 false 를 돌려준다. */
+  const ensureRoom = useCallback(async () => {
+    if (workspace.subjects.length < LIMITS.subjects) return true;
+    await modal.alert({
+      title: '과목을 더 추가할 수 없어요',
+      description: `과목은 ${LIMITS.subjects}개까지 만들 수 있습니다. 쓰지 않는 과목을 지우고 다시 시도해 주세요.`,
+      tone: 'warn',
+      icon: 'alert',
+    });
+    return false;
+  }, [workspace.subjects.length, modal]);
+
   const createSubject = useCallback(async () => {
+    if (!(await ensureRoom())) return null;
     const base = makeSubject({ hue: workspace.subjects.length % 12, cuts: makeCuts(), name: '' });
     const result = await modal.open<Pick<Subject, 'name' | 'memo' | 'hue' | 'target' | 'cuts'>>(
       ({ close }) => (
@@ -47,10 +61,10 @@ export function useSubjectActions() {
     );
     if (!result) return null;
     const subject = makeSubject({ ...base, ...result });
-    addSubject(subject);
+    if (!addSubject(subject)) return null;
     toast.ok(`"${subject.name}" 과목을 추가했어요.`);
     return subject;
-  }, [workspace.subjects.length, modal, addSubject, toast]);
+  }, [workspace.subjects.length, ensureRoom, modal, addSubject, toast]);
 
   const editSubject = useCallback(
     async (subject: Subject) => {
@@ -73,12 +87,13 @@ export function useSubjectActions() {
   );
 
   const duplicateSubject = useCallback(
-    (subject: Subject) => {
+    async (subject: Subject) => {
+      if (!(await ensureRoom())) return;
       const copy = cloneSubject(subject);
-      addSubject(copy);
+      if (!addSubject(copy)) return;
       toast.ok(`"${copy.name}" 으로 복제했어요.`);
     },
-    [addSubject, toast],
+    [ensureRoom, addSubject, toast],
   );
 
   const deleteSubject = useCallback(

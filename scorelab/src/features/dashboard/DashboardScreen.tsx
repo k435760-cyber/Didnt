@@ -4,14 +4,38 @@ import { overallStats, type Subject } from '../../lib/engine';
 import { Q } from '../../lib/rational';
 import { relativeTime, score as fmtScore, subjectColor } from '../../lib/format';
 import { Icon } from '../../ui/Icon';
-import { Empty } from '../../ui/primitives';
+import { Empty, Meter } from '../../ui/primitives';
+import { useModal } from '../../ui/ModalProvider';
 import { useWorkspace } from '../../state/workspace';
+import { AboutModal } from '../settings/AboutModal';
 import { useSubjectActions } from '../subjects/actions';
+
+/** 예시 데이터 대신 첫 화면에서 쓰는 방법을 알려 준다. */
+const STEPS = [
+  {
+    title: '과목 만들기',
+    body: '과목 이름과 목표 점수, 성취도 기준(A·B·C…)을 정합니다.',
+  },
+  {
+    title: '평가 넣기',
+    body: '지필·수행마다 반영 비율(%)과 만점, 입력 간격을 적습니다. 비율 합계는 100% 가 되어야 정확합니다.',
+  },
+  {
+    title: '점수 채우기',
+    body: '받은 점수는 확정으로, 아직 모르는 평가는 예상이나 미입력으로 둡니다.',
+  },
+];
 
 export function DashboardScreen({ onOpenSubject }: { onOpenSubject: (id: string) => void }) {
   const { workspace } = useWorkspace();
   const actions = useSubjectActions();
+  const modal = useModal();
   const stats = useMemo(() => overallStats(workspace.subjects), [workspace.subjects]);
+  const empty = workspace.subjects.length === 0;
+
+  // 과목을 만들면 바로 그 과목 화면으로 데려간다. 다음에 할 일은 평가를 넣는 것이라서.
+  const createSubject = () =>
+    void actions.createSubject().then((created) => created && onOpenSubject(created.id));
 
   return (
     <div className="page">
@@ -19,36 +43,66 @@ export function DashboardScreen({ onOpenSubject }: { onOpenSubject: (id: string)
         <div>
           <h1 className="page__title">내 성적</h1>
           <p className="page__sub">
-            과목 {stats.count}개 · 마지막 수정 {relativeTime(workspace.updatedAt)}
+            {empty
+              ? '과목을 만들면 여기에 한눈에 모입니다'
+              : `과목 ${stats.count}개 · 마지막 수정 ${relativeTime(workspace.updatedAt)}`}
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn--sm btn--primary"
-          onClick={() => void actions.createSubject()}
-        >
+        <button type="button" className="btn btn--sm btn--primary" onClick={createSubject}>
           <Icon name="plus" size={17} />
           과목
         </button>
       </header>
 
-      {workspace.subjects.length === 0 ? (
-        <div className="card">
-          <Empty
-            icon="layers"
-            title="과목이 없어요"
-            description="과목을 만들고 평가를 넣으면 목표까지 몇 점이 필요한지 계산해 드릴게요."
-            action={
+      {empty ? (
+        <>
+          <div className="card">
+            <Empty
+              icon="layers"
+              title="아직 과목이 없어요"
+              description="과목을 만들고 평가를 넣으면 지금 점수와 목표까지 필요한 점수를 계산해 드릴게요."
+              action={
+                <button type="button" className="btn btn--primary" onClick={createSubject}>
+                  <Icon name="plus" size={17} />첫 과목 만들기
+                </button>
+              }
+            />
+          </div>
+
+          <section className="card">
+            <div className="card__head">
+              <span className="card__title">처음이신가요?</span>
+              <span className="card__sub">세 단계면 끝납니다</span>
+            </div>
+            <div className="list">
+              {STEPS.map((step, index) => (
+                <div key={step.title} className="list__item" style={{ alignItems: 'flex-start' }}>
+                  <span className="list__icon">{index + 1}</span>
+                  <span className="list__text">
+                    <span className="list__title">{step.title}</span>
+                    <span className="list__sub" style={{ lineHeight: 1.6 }}>
+                      {step.body}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="card__body">
               <button
                 type="button"
-                className="btn btn--primary"
-                onClick={() => void actions.createSubject()}
+                className="btn btn--block"
+                onClick={() =>
+                  void modal.open(({ close }) => <AboutModal onClose={() => close()} />, {
+                    size: 'md',
+                  })
+                }
               >
-                <Icon name="plus" size={17} />첫 과목 만들기
+                <Icon name="info" size={17} />
+                계산 방식 자세히 보기
               </button>
-            }
-          />
-        </div>
+            </div>
+          </section>
+        </>
       ) : (
         <>
           <div className="tiles">
@@ -146,9 +200,7 @@ function SubjectCard({
           <span className="subject-card__name" style={{ display: 'block' }}>
             {subject.name}
           </span>
-          <span className="subject-card__meta">
-            평가 {subject.items.length}개{subject.sample ? ' · 예시' : ''}
-          </span>
+          <span className="subject-card__meta">평가 {subject.items.length}개</span>
         </span>
         {gradeName && (
           <span className="badge badge--brand" style={{ flex: 'none' }}>
@@ -167,6 +219,12 @@ function SubjectCard({
           <span className="subject-card__unit">점</span>
         </span>
       </button>
+
+      <Meter
+        value={projected.toNumber()}
+        marks={target ? [target.toNumber()] : []}
+        label={`${subject.name} 현재 점수`}
+      />
 
       <div className="subject-card__foot">
         {target ? (

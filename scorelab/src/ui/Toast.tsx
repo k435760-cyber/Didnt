@@ -55,8 +55,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
   const remove = useCallback((id: number) => {
+    const pending = timers.current.get(id);
+    if (pending) {
+      clearTimeout(pending);
+      timers.current.delete(id);
+    }
     setItems((current) => current.map((t) => (t.id === id ? { ...t, closing: true } : t)));
-    setTimeout(() => setItems((current) => current.filter((t) => t.id !== id)), 150);
+    const exit = setTimeout(() => {
+      timers.current.delete(-id);
+      setItems((current) => current.filter((t) => t.id !== id));
+    }, 150);
+    // 사라지는 애니메이션 타이머도 언마운트 때 같이 정리되도록 음수 키로 보관한다.
+    timers.current.set(-id, exit);
   }, []);
 
   const api = useMemo<ToastApi>(() => {
@@ -112,6 +122,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     {toast.action.label}
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="toast__close"
+                  aria-label="알림 닫기"
+                  onClick={() => remove(toast.id)}
+                >
+                  <Icon name="close" size={16} />
+                </button>
               </div>
             ))}
           </div>,

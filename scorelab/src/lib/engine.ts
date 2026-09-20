@@ -54,8 +54,6 @@ export interface Subject {
   cuts: GradeCut[];
   createdAt: string;
   updatedAt: string;
-  /** 예시 데이터로 만들어진 과목인지 */
-  sample: boolean;
 }
 
 export interface Workspace {
@@ -79,10 +77,19 @@ export const LIMITS = {
   fileBytes: 2 * 1024 * 1024,
 } as const;
 
-export const uid = (): string =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+export function uid(): string {
+  const web: Crypto | undefined = typeof crypto === 'undefined' ? undefined : crypto;
+  if (typeof web?.randomUUID === 'function') return web.randomUUID();
+  // randomUUID 가 없는 환경(구형 브라우저, http 로 연 페이지)에서도 uuid v4 형식을 지킨다.
+  // 서버의 sl_subjects.id 가 uuid 컬럼이라 형식이 어긋나면 동기화가 통째로 실패한다.
+  const bytes = new Uint8Array(16);
+  if (typeof web?.getRandomValues === 'function') web.getRandomValues(bytes);
+  else for (let i = 0; i < 16; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 
 const now = () => new Date().toISOString();
 
@@ -124,64 +131,16 @@ export function makeSubject(patch: Partial<Subject> = {}): Subject {
     cuts: [],
     createdAt: stamp,
     updatedAt: stamp,
-    sample: false,
     ...patch,
   };
 }
 
-/** 처음 열었을 때 보이는 예시 과목. 계산 흐름을 한눈에 보여주는 값으로 채운다. */
-export function sampleSubject(): Subject {
-  return makeSubject({
-    name: '수학',
-    memo: '예시 데이터입니다. 자유롭게 고치거나 지우세요.',
-    hue: 4,
-    sample: true,
-    target: '90',
-    cuts: makeCuts(),
-    items: [
-      makeEvaluation({
-        name: '1학기 중간고사',
-        category: 'written',
-        weight: '30',
-        max: '100',
-        step: '1',
-        status: 'confirmed',
-        score: '84',
-      }),
-      makeEvaluation({
-        name: '1학기 기말고사',
-        category: 'written',
-        weight: '30',
-        max: '100',
-        step: '1',
-        status: 'missing',
-        score: '',
-      }),
-      makeEvaluation({
-        name: '서술형 수행',
-        category: 'performance',
-        weight: '20',
-        max: '20',
-        step: '0.5',
-        status: 'confirmed',
-        score: '18.5',
-      }),
-      makeEvaluation({
-        name: '탐구 보고서',
-        category: 'performance',
-        weight: '20',
-        max: '10',
-        step: '0.5',
-        status: 'expected',
-        score: '9',
-      }),
-    ],
-  });
-}
-
+/**
+ * 처음 열었을 때의 상태. 예시 과목을 만들어 두지 않는다 —
+ * 남의 점수가 내 점수인 척 앉아 있는 것보다, 빈 화면에서 안내하는 편이 낫다.
+ */
 export function emptyWorkspace(): Workspace {
-  const subject = sampleSubject();
-  return { version: SCHEMA_VERSION, subjects: [subject], activeId: subject.id, updatedAt: now() };
+  return { version: SCHEMA_VERSION, subjects: [], activeId: '', updatedAt: now() };
 }
 
 export function cloneSubject(source: Subject): Subject {
@@ -194,7 +153,6 @@ export function cloneSubject(source: Subject): Subject {
     cuts: source.cuts.map((c) => ({ ...c, id: uid() })),
     createdAt: stamp,
     updatedAt: stamp,
-    sample: false,
   };
 }
 
@@ -317,9 +275,6 @@ export function subjectIssues(subject: Subject): SubjectIssue[] {
   issues.push(...cutErrors(subject.cuts).map((message) => ({ level: 'error' as const, message })));
   return issues;
 }
-
-export const isCalculable = (subject: Subject) =>
-  !subjectIssues(subject).some((i) => i.level === 'error');
 
 /* ------------------------------------------------------------------ 계산 */
 
@@ -520,7 +475,6 @@ export interface SubjectStat {
   /** 목표까지 남은 점수 (이미 넘었으면 0) */
   gap: Q;
   reachable: boolean;
-  progress: number;
 }
 
 export function subjectStat(subject: Subject): SubjectStat {
@@ -528,7 +482,6 @@ export function subjectStat(subject: Subject): SubjectStat {
   const target = Q.parse(subject.target);
   const gap = target ? Q.max(target.sub(summary.projected), ZERO) : ZERO;
   const reachable = target ? summary.ceiling.gte(target) : true;
-  const denom = summary.weightTotal.isZero() ? HUNDRED : summary.weightTotal;
   return {
     subject,
     summary,
@@ -536,7 +489,6 @@ export function subjectStat(subject: Subject): SubjectStat {
     target,
     gap,
     reachable,
-    progress: Math.max(0, Math.min(1, summary.projected.div(denom).toNumber())),
   };
 }
 

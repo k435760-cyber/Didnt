@@ -108,13 +108,14 @@ export function DataModal({ onClose }: { onClose: () => void }) {
   const resetAll = async () => {
     const ok = await modal.confirm({
       title: '모든 데이터를 지울까요?',
-      description: '이 기기의 과목과 점수가 전부 삭제되고 예시 과목만 남습니다. 되돌릴 수 없어요.',
+      description:
+        '이 기기에 저장된 과목과 점수가 전부 삭제되고 빈 상태로 돌아갑니다. 되돌릴 수 없으니 먼저 내보내 두는 걸 권합니다.',
       confirmText: '전부 삭제',
       destructive: true,
     });
     if (!ok) return;
     replaceWorkspace(emptyWorkspace());
-    toast.show('초기 상태로 되돌렸어요.');
+    toast.show('이 기기의 데이터를 모두 지웠어요.');
     onClose();
   };
 

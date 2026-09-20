@@ -49,7 +49,6 @@ interface SubjectRow {
   memo: string;
   hue: number;
   target: number | string;
-  sample: boolean;
   items: unknown[];
   cuts: unknown[];
   position: number;
@@ -66,7 +65,6 @@ const toRow = (subject: Subject, userId: string, position: number) => {
     memo: s.memo,
     hue: s.hue,
     target: s.target,
-    sample: s.sample,
     items: s.items,
     cuts: s.cuts,
     position,
@@ -82,7 +80,6 @@ const fromRow = (row: SubjectRow): Subject =>
     memo: row.memo,
     hue: row.hue,
     target: Number(row.target),
-    sample: row.sample,
     items: row.items,
     cuts: row.cuts,
     createdAt: row.created_at,
@@ -197,8 +194,27 @@ export async function syncWorkspace(userId: string, local: Workspace): Promise<S
     writeTombstones({});
   }
 
+  /*
+   * 순서는 이 기기의 목록을 그대로 따른다. 예전에는 최근 수정순으로 다시 세웠는데,
+   * 그러면 점수 하나만 고쳐도 과목이 맨 앞으로 튀어 올라 목록이 흔들렸다.
+   * 이 기기에 없던 과목(다른 기기에서 받아온 것)만 서버의 position 순서로 뒤에 붙인다.
+   */
+  const localOrder = new Map(local.subjects.map((s, index) => [s.id, index]));
+  const remotePosition = new Map(
+    ((subjectsResult.data ?? []) as SubjectRow[]).map((row) => [row.id, row.position ?? 0]),
+  );
   const subjects = [...merged.values()]
-    .sort((a, b) => time(b.updatedAt) - time(a.updatedAt))
+    .sort((a, b) => {
+      const ai = localOrder.get(a.id);
+      const bi = localOrder.get(b.id);
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+      return (
+        (remotePosition.get(a.id) ?? 0) - (remotePosition.get(b.id) ?? 0) ||
+        time(b.updatedAt) - time(a.updatedAt)
+      );
+    })
     .slice(0, LIMITS.subjects);
 
   if (toPush.length) {
