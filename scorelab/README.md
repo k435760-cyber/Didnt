@@ -14,12 +14,24 @@
 
 ## 실행
 
+이미 빌드된 `dist/` 가 함께 들어 있다면 **설치 없이** 바로 열 수 있습니다.
+
+```sh
+node scripts/serve-dist.mjs        # http://127.0.0.1:4173  (PORT=8080 으로 변경 가능)
+```
+
+의존성이 없는 스크립트라 `npm install` 이 필요 없습니다. `dist/index.html` 을 더블클릭하지 말고
+꼭 이 서버로 여세요 — `file://` 에서는 서비스 워커와 로그인이 동작하지 않습니다.
+
+소스를 고치려면:
+
 ```sh
 npm install
 npm run dev        # http://127.0.0.1:5173
 npm run verify     # typecheck + test + build
 npm run build      # dist/ 정적 산출물
-npm run preview    # 빌드 결과 확인 (서비스 워커는 이쪽에서만 동작)
+npm run preview    # Vite 로 빌드 결과 확인
+npm run serve      # 위의 의존성 없는 서버와 같음
 npm run icons      # public/icons/*.png 다시 생성
 ```
 
