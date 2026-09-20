@@ -1,0 +1,159 @@
+/* 디자인 토큰. 색은 전부 여기서만 정의하고 컴포넌트는 변수만 쓴다. */
+
+:root {
+  color-scheme: light;
+
+  /* 브랜드 */
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --accent-400: #2dd4bf;
+  --accent-500: #14b8a6;
+  --accent-600: #0d9488;
+
+  /* 의미색 */
+  --ok-500: #10b981;
+  --ok-fg: #047857;
+  --warn-500: #f59e0b;
+  --warn-fg: #b45309;
+  --bad-500: #f43f5e;
+  --bad-fg: #be123c;
+  /* 위험 버튼은 흰 글자가 얹히므로 배경을 한 단계 더 진하게 쓴다. */
+  --bad-solid: #e11d48;
+  --bad-solid-fg: #ffffff;
+  --info-500: #0ea5e9;
+
+  /* 표면 */
+  --bg: #f6f7fb;
+  --bg-deep: #eceef6;
+  --surface: #ffffff;
+  --surface-2: #f8f9fd;
+  --surface-3: #f1f3fa;
+  --surface-inverse: #14161f;
+  --overlay: rgb(17 19 28 / 0.42);
+
+  /* 글자 */
+  --text: #14161f;
+  --text-2: #474d60;
+  --text-3: #6b7285;
+  --text-inverse: #ffffff;
+
+  /* 선 */
+  --line: #e4e7f0;
+  --line-strong: #d3d8e6;
+  --focus: var(--brand-500);
+
+  /* 그림자 */
+  --shadow-1: 0 1px 2px rgb(20 22 31 / 0.05), 0 1px 3px rgb(20 22 31 / 0.06);
+  --shadow-2: 0 4px 10px rgb(20 22 31 / 0.06), 0 12px 28px rgb(20 22 31 / 0.08);
+  --shadow-3: 0 12px 24px rgb(20 22 31 / 0.1), 0 32px 64px rgb(20 22 31 / 0.14);
+  --ring: 0 0 0 3px rgb(99 102 241 / 0.28);
+
+  /* 치수 */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-full: 999px;
+  --tap: 44px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --shell-max: 1180px;
+
+  /* 움직임 */
+  --ease: cubic-bezier(0.32, 0.72, 0.28, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 140ms;
+  --base: 220ms;
+  --slow: 380ms;
+
+  /* 과목 색상환 (hue 0~11) */
+  --hue-0: #6366f1;
+  --hue-1: #0ea5e9;
+  --hue-2: #14b8a6;
+  --hue-3: #22c55e;
+  --hue-4: #f59e0b;
+  --hue-5: #f97316;
+  --hue-6: #ef4444;
+  --hue-7: #ec4899;
+  --hue-8: #a855f7;
+  --hue-9: #8b5cf6;
+  --hue-10: #64748b;
+  --hue-11: #0891b2;
+
+  --font:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Segoe UI', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --font-num: 'SF Mono', ui-monospace, 'Menlo', 'Cascadia Mono', 'Segoe UI Mono', monospace;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --brand-50: #1e1b4b;
+  --brand-100: #272363;
+  --brand-200: #3730a3;
+  --brand-300: #6366f1;
+  --brand-400: #818cf8;
+  --brand-500: #818cf8;
+  --brand-600: #a5b4fc;
+  --brand-700: #c7d2fe;
+  --accent-400: #5eead4;
+  --accent-500: #2dd4bf;
+  --accent-600: #5eead4;
+
+  --ok-500: #34d399;
+  --ok-fg: #6ee7b7;
+  --warn-500: #fbbf24;
+  --warn-fg: #fcd34d;
+  --bad-500: #fb7185;
+  --bad-fg: #fda4af;
+  --bad-solid: #fb7185;
+  --bad-solid-fg: #3f0712;
+  --info-500: #38bdf8;
+
+  --bg: #0a0c13;
+  --bg-deep: #05070c;
+  --surface: #141824;
+  --surface-2: #1a1f2e;
+  --surface-3: #222839;
+  --surface-inverse: #f6f7fb;
+  --overlay: rgb(3 5 10 / 0.62);
+
+  --text: #edf0f7;
+  --text-2: #a8b0c4;
+  --text-3: #7d869c;
+  --text-inverse: #0a0c13;
+
+  --line: #262c3d;
+  --line-strong: #333b50;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 4px 12px rgb(0 0 0 / 0.42), 0 16px 32px rgb(0 0 0 / 0.36);
+  --shadow-3: 0 16px 32px rgb(0 0 0 / 0.5), 0 40px 80px rgb(0 0 0 / 0.55);
+  --ring: 0 0 0 3px rgb(129 140 248 / 0.36);
+
+  --hue-0: #818cf8;
+  --hue-1: #38bdf8;
+  --hue-2: #2dd4bf;
+  --hue-3: #4ade80;
+  --hue-4: #fbbf24;
+  --hue-5: #fb923c;
+  --hue-6: #f87171;
+  --hue-7: #f472b6;
+  --hue-8: #c084fc;
+  --hue-9: #a78bfa;
+  --hue-10: #94a3b8;
+  --hue-11: #22d3ee;
+}
